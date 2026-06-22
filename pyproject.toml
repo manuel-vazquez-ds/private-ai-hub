@@ -1,0 +1,7 @@
+[project]
+name = "private-ai-hub"
+version = "0.0.1"
+description = "Private AI Hub: a browser-based local AI gateway for private LLM inference and file collaboration."
+readme = "README.md"
+requires-python = ">=3.13.12"
+dependencies = []

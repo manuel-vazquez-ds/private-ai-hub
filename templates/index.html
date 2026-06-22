@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private AI Hub</title>
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+    <div id="contenedor-principal">
+        <header id="bloque-superior">
+            <h1>Private AI Hub</h1><span id="author">by Manuel Vázquez</span>
+            <hr>
+        </header>
+        <main id="bloque-central">
+            
+        </main>
+        <footer id="bloque-inferior">
+            <!-- Formulario de envío DE MOMENTO POR JAVASCRIPT -->
+            <form id="bloque-formulario">
+                <!-- de moment mantenim input tipus text
+                <textarea id="el-mensaje" name="mensaje"
+                placeholder="Escribe tu mensaje..." rows="4" cols="50"></textarea>
+                -->
+                <input type="text" id="el-mensaje" name="mensaje"
+                placeholder="Escribe tu mensaje...">
+                <!-- botó deshabilitat pq no tindrà text per enviar d'entrada -->
+                <button type="submit" id="enviar" disabled="true">Enviar</button>
+            </form>
+            <!-- FIN DEL FORMULARIO -->
+            
+        </footer>
+
+    </div>
+    <div id="content">
+        
+    </div>
+<script src="../static/app.js"></script>
+</body>
+</html>

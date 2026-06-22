@@ -1,0 +1,9 @@
+.venv/
+.vscode/
+__pycache__/
+_eines_git/
+material/
+.backs/
+uv.lock
+afegir.txt
+.python-version
