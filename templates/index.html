@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private AI Hub</title>
-    <link rel="stylesheet" href="../static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div id="contenedor-principal">
         <header id="bloque-superior">
-            <h1>Private AI Hub</h1><span id="author">by Manuel Vázquez</span>
+            <h1>Private AI Hub</h1><span id="author">{{byAuthor}} Manuel Vázquez</span>
             <hr>
         </header>
         <main id="bloque-central">
@@ -23,9 +23,9 @@
                 placeholder="Escribe tu mensaje..." rows="4" cols="50"></textarea>
                 -->
                 <input type="text" id="el-mensaje" name="mensaje"
-                placeholder="Escribe tu mensaje...">
+                placeholder="{{msgPlaceholder}}">
                 <!-- botó deshabilitat pq no tindrà text per enviar d'entrada -->
-                <button type="submit" id="enviar" disabled="true">Enviar</button>
+                <button type="submit" id="enviar" disabled="true">{{sendButton}}</button>
             </form>
             <!-- FIN DEL FORMULARIO -->
             
@@ -35,6 +35,6 @@
     <div id="content">
         
     </div>
-<script src="../static/app.js"></script>
+<script src="/static/app.js"></script>
 </body>
 </html>
