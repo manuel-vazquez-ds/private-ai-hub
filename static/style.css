@@ -46,7 +46,8 @@ body, html {
     padding: 20px;
     /* box-sizing: border-box; */
     display: flex;
-    align-items: center;
+    /* align-items: center; */
+    align-items: start;
     justify-content: center;
     gap: 20px;
 }
@@ -56,24 +57,106 @@ body, html {
     flex: 1; /* Esto le dice: "ocupa todo el espacio restante disponible" */
     overflow-y: auto; /* Si el contenido desborda, muestra barra de scroll vertical */
     background-color: #f0f0f0; /* Gris claro */
+    background-color: white;
     padding: 20px;
     box-sizing: border-box;
     scroll-behavior: smooth;
+    align-self: center;
+    width: 80%;
+    max-width: 800px;
 }
 #bloque-formulario{ display: flex;
     width: 100%; max-width: 600px;
 }
-#el-mensaje{ flex-grow: 1;
+/* #el-mensaje{ flex-grow: 1;
     padding: 10px;
     border: 1px solid #2196F3;
     border-radius: 4px;
-    font-size: 16px; }
+    font-size: 16px; } */
+#el-mensaje{flex-grow: 1; 
+    padding: 10px;
+    border: 1px solid #2196F3;
+    border-radius: 4px;
+    min-height: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    font-family: Arial,sans-serif;
+    font-size: 16px;
+    /* display: inline-flexbox; */
+ }
 #enviar { padding: 10px 20px;
     background-color: #2196F3;
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-family: Arial,sans-serif;
+    height: 40px;
     font-weight: bold; }
 #enviar:hover { background-color: #2159f3; }
 #enviar:disabled { background-color: #ccc; cursor: not-allowed; }
+#el-flexo{
+  display:flex;
+  justify-content: space-between;
+}
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #2196F3;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+}
+option {
+  color: #304FFE;
+}
+#idi {
+    display: inline;
+    width: 40px;
+    height: 40px;
+}
+#idibox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.msgprompt{
+    /* background-color: #d3d3d3; */
+    background-color: #f0f0f0;
+    color: #000;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 75%;
+    float: right; 
+    clear: both;  
+    margin: 15px;
+    /* perquè mantingui els salts de línia del text */
+    white-space: pre-wrap;
+}
+.msgstatus {
+    float: right;
+    clear: both;
+    margin: 3px 12px 5px;
+    max-width: 95%;
+    font-style: italic;
+    font-size: 0.8em;
+    color: #bbb;
+}
+.msgstatusfinal {
+    float: right;
+    clear: both;
+    margin: 3px 12px 5px;
+    max-width: 95%;
+    font-style: italic;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.msgresponse{
+   float: left;
+    clear: both;
+    margin: 15px 5px 25px;
+    max-width: 95%;
+    white-space: pre-wrap;
+}
