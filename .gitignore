@@ -1,5 +1,6 @@
 .venv/
 .vscode/
+.proves/
 __pycache__/
 _eines_git/
 material/

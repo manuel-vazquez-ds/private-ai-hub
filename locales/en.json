@@ -1,5 +1,6 @@
 {
     "byAuthor": "by Manuel Vázquez",
     "msgPlaceholder": "Write your message...",
-    "sendButton": "Send"
+    "sendButton": "Send",
+    "defaultChatName": "Unnamed Chat"
 }

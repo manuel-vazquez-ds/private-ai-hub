@@ -12,6 +12,8 @@ const mensaje = document.getElementById("el-mensaje");
 const bloqueFormulario = document.getElementById("bloque-formulario");
 const botonEnviar = document.getElementById("enviar");
 const idiomaSelect = document.getElementById("idioma");
+let currentConversationId = null;
+ 
 mensaje.addEventListener('input', () => {
   // Si el texto limpio es igual a "", 'disabled' será true.
   botonEnviar.disabled = mensaje.value.trim() === '';
@@ -64,9 +66,11 @@ bloqueFormulario.addEventListener('submit', async(e) => {
      },
      body: JSON.stringify({
        message: mensaje.value.trim(),
+       conversacio_id: currentConversationId,
      }),
    });
    const data = await resposta.json();
+   currentConversationId = data.conversacio_id;
    afegirMsgResponse(data.response);
    finalitzarMsgStatus(estat);
   } catch (error) {
