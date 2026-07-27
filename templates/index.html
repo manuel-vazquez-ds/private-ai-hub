@@ -11,6 +11,8 @@
     <link rel="icon" href="/static/icons/favicon.png">    
     <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
 
+    <link rel="stylesheet" href="/static/vendor/katex.min.css">
+
 </head>
 <body>
     <div id="contenedor-principal">
@@ -39,14 +41,19 @@
         <footer id="bloque-inferior">
             <!-- Formulario de envío DE MOMENTO POR JAVASCRIPT -->
             <form id="bloque-formulario">
-                <!-- de moment mantenim input tipus text -->
-                <textarea id="el-mensaje" name="mensaje"
-                placeholder="{{msgPlaceholder}}" idio-place="msgPlaceholder" rows="1"></textarea>
-               
-                <!-- <input type="text" id="el-mensaje" name="mensaje"
-                placeholder="{{msgPlaceholder}}" idio-place="msgPlaceholder"> -->
-                <!-- botó deshabilitat pq no tindrà text per enviar d'entrada -->
-                <button type="submit" id="enviar" disabled="true" idio="sendButton">{{sendButton}}</button>
+                <select id="perfil">
+                    <option value="{{perfils[0][0]}}">{{perfils[0][1]}}</option>
+                    {% for perfil in perfils[1:] %}
+                        <option value="{{perfil[0]}}">{{perfil[1]}}</option>
+                    {% endfor %}
+                </select>
+                <div style="display: flex;">
+                    <!-- de moment mantenim input tipus text -->
+                    <textarea id="el-mensaje" name="mensaje"
+                    placeholder="{{msgPlaceholder}}" idio-place="msgPlaceholder" rows="1"></textarea>               
+                    <!-- botó deshabilitat pq no tindrà text per enviar d'entrada -->
+                    <button type="submit" id="enviar" disabled="true" idio="sendButton">{{sendButton}}</button>
+                </div>
             </form>
             <!-- FIN DEL FORMULARIO -->
             
@@ -59,6 +66,14 @@
 <!-- IMPORTANT: ESTÀ DESHABILITAT PERQUÈ CARREGUI I NO FACI CACHÉ
 <script src="/static/app.js"></script>
 -->
+
+<!-- llibreries externes -->
+<script src="/static/vendor/marked.umd.min.js"></script>
+<script src="/static/vendor/purify.min.js"></script>
+<script src="/static/vendor/katex.min.js"></script>
+<script src="/static/vendor/auto-render.min.js"></script>
+
+<!-- codi generat per mi -->
 <script src="/static/app.js?v={{version}}"></script>
 </body>
 </html>

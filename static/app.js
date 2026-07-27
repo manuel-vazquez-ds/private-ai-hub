@@ -12,6 +12,7 @@ const mensaje = document.getElementById("el-mensaje");
 const bloqueFormulario = document.getElementById("bloque-formulario");
 const botonEnviar = document.getElementById("enviar");
 const idiomaSelect = document.getElementById("idioma");
+const perfilSelect = document.getElementById("perfil");
 let currentConversationId = null;
  
 mensaje.addEventListener('input', () => {
@@ -22,7 +23,21 @@ function afegirMissatge(text, tipus) {
   // console.log("Afegir missatge");
   const node = document.createElement("div");
   node.classList.add(tipus)
-  node.textContent = text;
+  if (tipus !== "msgresponse") {
+    node.textContent = text;
+  }else{
+    const html = DOMPurify.sanitize(
+      marked.parse(text));
+    node.innerHTML = html;
+    renderMathInElement(node, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false},
+        { left: "\\(", right: "\\)", display: false },
+        { left: "\\[", right: "\\]", display: true }
+      ], throwOnError: false
+    });
+  }
   bloqueCentral.appendChild(node);
   return node;
 }
@@ -67,12 +82,14 @@ bloqueFormulario.addEventListener('submit', async(e) => {
      body: JSON.stringify({
        message: mensaje.value.trim(),
        conversacio_id: currentConversationId,
+       perfil_id: perfilSelect.value
      }),
    });
    const data = await resposta.json();
    currentConversationId = data.conversacio_id;
    afegirMsgResponse(data.response);
    finalitzarMsgStatus(estat);
+   perfilSelect.disabled = true;
   } catch (error) {
     console.error(error);
     estat.node.classList.add("msgstatusfinal");
@@ -88,25 +105,6 @@ bloqueFormulario.addEventListener('submit', async(e) => {
   mensaje.focus();
 });
 
-
-// bloqueFormulario.addEventListener('submit', (e) => {
-//   console.log("Submit handler called"); // Add this
-//   e.preventDefault();
-//   // console.log(mensaje.value);
-//   if (bloqueCentral.textContent === textDeProva) {
-//     bloqueCentral.textContent = mensajeEnvido + mensaje.value;
-//   // } else {
-//   //   bloqueCentral.textContent += "<br><br>" + mensajeEnvido + mensaje.value;
-//   // }
-//   } else {
-//     bloqueCentral.innerHTML += "<br><br>" + mensajeEnvido + mensaje.value;
-//   }
-//   bloqueCentral.scrollTop = bloqueCentral.scrollHeight;
-//   mensaje.value = "";
-//   mensaje.style.height = "auto";
-//   botonEnviar.disabled = true;
-//   mensaje.focus();
-// });
 
 //ca: per capturar l'idioma
 async function reclamaIdioma(quinIdioma) {
@@ -124,20 +122,6 @@ async function reclamaIdioma(quinIdioma) {
  canvia_idioma(quinIdioma, nou_idioma);
 }
 
-// idiomaSelect.addEventListener('change', async () => {
-//   console.log("Idioma seleccionat: " + idiomaSelect.value);
-//   // ca: fem una petició POST per actualitzar l'idioma
-//   const response = await fetch("/posa_idioma", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify({language: idiomaSelect.value}),
-//   });
-//  const nou_idioma = await response.json();
-//  console.log(nou_idioma);
-//  canvia_idioma(idiomaSelect.value, nou_idioma);
-// });
 idiomaSelect.addEventListener('change', async (elEvent) => {
   // console.log("Idioma seleccionat: " + elEvent.target.value);
   await reclamaIdioma(elEvent.target.value);

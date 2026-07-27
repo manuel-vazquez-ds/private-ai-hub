@@ -1,10 +1,3 @@
-# def main():
-#     print("Hello from proj-3!")
-
-
-# if __name__ == "__main__":
-#     main()
-
 from pathlib import Path
 from fastapi import FastAPI, Request
 # from fastapi.params import Depends
@@ -38,16 +31,9 @@ for lang in LOCALES_DIR.glob("*.json"):
         locales[lang.stem] = json.load(f)
 
 # ca: Configurar l'API per utilitzar les traduccions
-# TODO: Implementar la lògica per carregar les traduccions
 default_language = "en"
 # ca: Idioma actual
 
-# Tot això hara ho fem directament a la funció
-    # current_language = default_language
-    # # ca: Carreguem les traduccions
-    # translations = locales.get(current_language, locales[default_language])
-    # # ca: posteriorment es dupliquen al mirar la cookie
-    # # print(f"Translations: {translations}")
 
 # ca: versió 0.3.0 abans de fastapi intentem carregar la llibreria sqlite3
 try:
@@ -70,21 +56,35 @@ try:
             id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
             session_id TEXT NOT NULL,
             model_id INTEGER NOT NULL, nom TEXT DEFAULT 'default chat', 
-            stream TEXT DEFAULT 'false', options TEXT DEFAULT '{}',
+            stream TEXT DEFAULT 'false', think TEXT DEFAULT 'true',
+            options TEXT DEFAULT '{}',
             messages TEXT DEFAULT '[]', metadades TEXT DEFAULT '[]',
             data_creacio TEXT DEFAULT CURRENT_TIMESTAMP,
             data_modificacio TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
             FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE)
             """
+        # ca: Nou perfil apuntem a un model per defecte
         tbl_perfil = """CREATE TABLE IF NOT EXISTS perfil (
             id INTEGER PRIMARY KEY AUTOINCREMENT, nom_rol UNIQUE ON CONFLICT IGNORE,
-            content NOT NULL, parametres TEXT DEFAULT '{}')
+            model_id INTEGER NOT NULL, content NOT NULL, parametres TEXT DEFAULT '{}',
+            think TEXT DEFAULT 'true',
+            FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE SET DEFAULT)
             """
         users_data_ini = ("AnonUser",)
-        models_data_ini = ("gemma4:12b-it-qat", "Gemma 4", '{"temperature":0.4,"num_ctx":8192, "top_k":35,"top_p":0.9,"repeat_penalty":1.2}')
-        perfil_data_ini = ("Analista",
-                        "Mi rol principal eres un analista estadístico, si puedes responde con estos términos y en el idioma del mensaje")
+        # ca: Per més d'un perfil i model
+        models_data_ini = [("gemma4:12b-it-qat", "Gemma 4", '{"temperature":0.3,"num_ctx":16384, "top_k":35,"top_p":0.9,"repeat_penalty":1.2}'),
+                          ("qwen3.6:latest", "Qwen 3.6", '{"temperature":0.5,"num_ctx":32768, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}'),
+                          ("qwen3.5:4b", "Qwen 3.5 4B", '{"temperature":1.1,"num_ctx":16384, "top_k":30,"top_p":0.75,"repeat_penalty":1.1}')]
+        perfil_data_ini = [("Analyst / Analista", 1,
+                        "Mi rol principal eres un analista estadístico, si puedes responde con estos términos y en el idioma del mensaje", '{}',"true"),
+                        ("Generalist expert / Experto generalista / Expert generalista", 2,
+                        "Soy un experto en cualquier área, que además de dar la respuesta más adecuada según el tipo de pregunta, también puede ofrecer consejos y recomendaciones.", '{}',"true"),
+                        ("Fast Responder / Respondedor Rápido / Responedor Ràpid", 3,
+                        "Person who answers instantly, assuming knowledge without deep thinking; speed over accuracy. No thinking.", '{}',"false"),
+                        ("Cultured Thinker / Pensador Culto / Pensador Culte", 1,
+                        "Mi rol principal es de una persona con conocimiento amplio, buen razonamiento y cultura sólida; inteligente sin ser erudito, si puedes responde con estos términos y en el idioma del mensaje",
+                         '{"temperature":0.5, "top_k":40, "repeat_penalty":1.1}', "true")]
         cursor.execute(tbl_users)
         cursor.execute(tbl_models)
         cursor.execute(tbl_conversations)
@@ -93,9 +93,12 @@ try:
         if cursor.execute("SELECT 1 FROM users LIMIT 1").fetchone() is None:
             cursor.execute("INSERT INTO users (nom) VALUES (?)", (users_data_ini))
         if cursor.execute("SELECT 1 FROM models LIMIT 1").fetchone() is None:
-            cursor.execute("INSERT INTO models (nom, nom_a_mostrar, parametres) VALUES (?,?,?)", (models_data_ini))
+            # cursor.execute("INSERT INTO models (nom, nom_a_mostrar, parametres) VALUES (?,?,?)", models_data_ini)
+            # ara així, que posem 2 models alhora
+            cursor.executemany("INSERT INTO models (nom, nom_a_mostrar, parametres) VALUES (?,?,?)", models_data_ini)
         if cursor.execute("SELECT 1 FROM perfil LIMIT 1").fetchone() is None:
-            cursor.execute("INSERT INTO perfil (nom_rol, content) VALUES (?,?)", (perfil_data_ini))
+            # cursor.execute("INSERT INTO perfil (nom_rol, content) VALUES (?,?)", (perfil_data_ini))
+            cursor.executemany("INSERT INTO perfil (nom_rol, model_id, content, parametres, think) VALUES (?,?,?,?,?)", (perfil_data_ini))
 except Exception as e:
     print(f"Error loading database / error leyendo la base de detos / error llegint la base de dades: {e}")
 
@@ -107,16 +110,6 @@ privateAIH = FastAPI(title="Private AI Hub", version="0.3.0")
 # ca: Carreguem directori static a FastAPI
 privateAIH.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Ara ja no farà falta
-    # def mira_cookie_idioma(request: Request) -> str:
-    #     # ca: Intentem obtenir l'idioma de la cookie
-    #     lang = request.cookies.get("posaAquestIdioma")
-    #     # ca: Si no hi ha cookie, utilitzem l'idioma per defecte
-    #     # print(f"Idioma de la cookie: {lang}")
-    #     # AIXÒ ES PODIA HAVER FET DINS DEL .get() amb un valor per defecte, que es un diccionari!!
-    #     if not lang:
-    #         lang = default_language
-    #     return lang
 
 # @privateAIH.get("/")
 @privateAIH.get("/",response_class=HTMLResponse)
@@ -137,7 +130,8 @@ async def privateAIH_root(request: Request):
         "sendButton": translations.get("sendButton", "Send"),
         # afegim una versió per forçar la recàrrega dels fitxers estàtics
         "version": int(time.time()),
-        "current_language": current_language
+        "current_language": current_language,
+        "perfils": await recuperaPerfils()
     }
     # return templates.TemplateResponse("index.html", {"request": request})
     # return templates.TemplateResponse("index.html", {"request": {}})
@@ -174,7 +168,6 @@ async def chat(request: Request):
     body = await request.json()
     # print(f"Body: {body}")
     # ca: retornem la resposta
-    # return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{body['message']}"})
     # ca: v0.3.0 - afegim session_id
     session_id = request.cookies.get("session_id", None)
     if session_id:
@@ -183,10 +176,10 @@ async def chat(request: Request):
 
         convesacio_id = body.get("conversacio_id", None)
         # ca: Agafem parametres per defecte, estiguin o no informats
-        perfil_id = body.get("perfil_id", 1)
-        model_id = body.get("model_id", 1)
+        perfil_id = body.get("perfil_id", 1) 
+        model_id = body.get("model_id", await modelFromPerfil(perfil_id))
 
-        conversacio, model_nom, opcions, missatges, metadades = await localitza_una(session_id, usuari[0], convesacio_id, perfil_id, model_id)
+        conversacio, model_nom, opcions, missatges, metadades, elStream, elThink = await localitza_una(session_id, usuari[0], convesacio_id, perfil_id, model_id)
         # he de canviar segurament el que retorna localitza_una perquè sigui més fàcil de tractar
         # per ara ho deixo así
 
@@ -196,12 +189,13 @@ async def chat(request: Request):
 
         # Aquesta serà la crida al llm
         try:
-            resposta = await envia_missatge(model_nom, opcions, missatges)
+            resposta = await envia_missatge(model_nom, elStream, opcions, missatges, elThink)
             if resposta.status_code == 200:
                 resposta = resposta.json()
                 # AQUÍ HEM DE GUARDAR EL MISSATGE I LES METADADES ADDICIONALS
                 missatges.append({"role":"assistant","content":resposta["message"]["content"]})
                 metadades.append({k:v for k,v in resposta.items() if k not in ("message",)})
+                # print(resposta["message"])
 
                 conversacio["messages"] = json.dumps(missatges)
                 conversacio["metadades"] = json.dumps(metadades)
@@ -211,19 +205,14 @@ async def chat(request: Request):
                 # resposta = "Error en la crida al LLM"
                 resposta = {"message": {"content": f"Error de status code {resposta.status_code}"}}
             #resposta= json.dumps({"model": model_nom, "messages": missatges, "stream": False, "options": opcions})
-        # except:
         except requests.exceptions.RequestException as e:
             # resposta = "Error en la crida al LLM"
             resposta = {"message": {"content": f"Error en la crida al LLM: {str(e)}"}}
             pass
-
-
-
-#        return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{body['message']}\n amb sessió!! {session_id}\n Usuari: {usuari}"})
-        # return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{resposta}\n"})
         # fem sols la part de l'assistant
 
-        return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{resposta['message']['content']}\n","conversacio_id": conversacio["id"]})
+        return JSONResponse({"response": f"{resposta['message']['content']}\n","conversacio_id": conversacio["id"]})
+        # return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{resposta['message']['content']}\n","conversacio_id": conversacio["id"]})
         # return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{resposta['message']}\n"})
         # return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{resposta}\n"})
         
@@ -248,29 +237,22 @@ async def localitza_una(session_id:str, user_id: int, conversacio_id: int, perfi
         cursor = prAIHdb.cursor()
         if conversacio_id:
             if user_id==1:
-                conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND session_id = ?", (conversacio_id, session_id)).fetchone()[:9]
-            else:
-                conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND user_id = ?", (conversacio_id, user_id)).fetchone()[:8]
 
-            conversacions = dict(zip(["id", "user_id", "session_id", "model_id", "nom", "stream", "options", "messages", "metadates"], conversacions))
+                conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND session_id = ?", (conversacio_id, session_id)).fetchone()[:10]
+            else:
+                conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND user_id = ?", (conversacio_id, user_id)).fetchone()[:9]
+
+            conversacions = dict(zip(["id", "user_id", "session_id", "model_id", "nom", "stream", "think", "options", "messages", "metadates"], conversacions))
             model_nom = cursor.execute("SELECT nom FROM models WHERE id = ?", (conversacions["model_id"],)).fetchone()[0]
             opcions = json.loads(conversacions["options"])
             missatges = json.loads(conversacions["messages"])
             metadades = json.loads(conversacions["metadates"])
+            elStream = json.loads(conversacions["stream"])
+            elThink = json.loads(conversacions["think"])
+
         else:
             # construim la llista d'elements de la conversació, amb els primers 8 camps per defecte
-            conversacions = [None, user_id, session_id, model_id, translations.get("defaultChatName", "Unnamed Chat"), "false", "{}", "[]", "[]"]
-            # id , user_id , session_id , model_id , nom , stream , options , messages , data_creacio , data_modificacio
-            # session_id TEXT NOT NULL,
-            # model_id INTEGER NOT NULL, nom TEXT DEFAULT 'default chat', 
-            # stream TEXT DEFAULT 'false', options TEXT DEFAULT '{}',
-            # messages TEXT DEFAULT '[]',
-            # data_creacio TEXT DEFAULT CURRENT_TIMESTAMP,
-            # data_modificacio TEXT DEFAULT CURRENT_TIMESTAMP,
-            # FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-            # FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE
-
-            # AFEEGIREM LA RESTA DESPRÉS, PER SI INCORPOREN PARÀMETRES EN UN FUTUR
+            conversacions = [None, user_id, session_id, model_id, translations.get("defaultChatName", "Unnamed Chat"), "false", "true", "{}", "[]", "[]"]
             # ca: Convertim conversations en un diccionari
             # conversacions = {
             #     "id": conversacions[0],
@@ -279,17 +261,18 @@ async def localitza_una(session_id:str, user_id: int, conversacio_id: int, perfi
             #     "model_id": conversacions[3],
             #     "nom": conversacions[4],
             #     "stream": conversacions[5],
-            #     "options": conversacions[6],
-            #     "messages": conversacions[7]
+            #     "think": conversacions[6],
+            #     "options": conversacions[7],
+            #     "messages": conversacions[8]
             # }
             # millor ho fem amb zip
-            conversacions = dict(zip(["id", "user_id", "session_id", "model_id", "nom", "stream", "options", "messages","metadades"], conversacions))
+            conversacions = dict(zip(["id", "user_id", "session_id", "model_id", "nom", "stream", "think", "options", "messages","metadates"], conversacions))
             # ca: Llegim valors bàsics
             model_nom, model_opcions = cursor.execute("SELECT nom, parametres FROM models WHERE id = ?", (model_id,)).fetchone()
             # ca: convertim a diccionari
             model_opcions = json.loads(model_opcions)
             # ca: ara el perfil
-            perfil_content, perfil_opcions = cursor.execute("SELECT content, parametres FROM perfil WHERE id = ?", (perfil_id,)).fetchone()
+            perfil_content, perfil_opcions, perfil_think = cursor.execute("SELECT content, parametres, think FROM perfil WHERE id = ?", (perfil_id,)).fetchone()
             # ca: convertim a diccionari
             perfil_opcions = json.loads(perfil_opcions)
             opcions = {**model_opcions, **perfil_opcions}
@@ -299,10 +282,15 @@ async def localitza_una(session_id:str, user_id: int, conversacio_id: int, perfi
             conversacions["messages"] = json.dumps(missatges)
             conversacions["metadades"] = json.dumps(metadades)
 
-    return conversacions, model_nom, opcions, missatges, metadades
+            elStream = json.loads(conversacions["stream"])
+            elThink = json.loads(perfil_think)
+            conversacions["think"] = json.dumps(elThink)
 
-async def envia_missatge(model_nom, opcions, missatges)-> requests:
-    return requests.post(llmProvider, json={"model": model_nom, "messages": missatges, "stream": False, "options": opcions}, verify=False)
+    return conversacions, model_nom, opcions, missatges, metadades, elStream, elThink
+
+async def envia_missatge(model_nom, stream, opcions, missatges, elThink)-> requests:
+    # print(json.dumps({"model": model_nom, "messages": missatges, "stream": stream, "think": elThink, "options": opcions}))
+    return requests.post(llmProvider, json={"model": model_nom, "messages": missatges, "stream": stream, "think": elThink, "options": opcions}, verify=False)
 
 async def guarda_conversacio(conversacio: dict):
     # ca: Aquí guardem la conversació
@@ -314,10 +302,22 @@ async def guarda_conversacio(conversacio: dict):
             cursor.execute("UPDATE conversations SET messages = ?, metadades = ?, data_modificacio = ? WHERE id = ?",
              (conversacio["messages"], conversacio["metadades"], data_ara, conversacio["id"]))
         else:
-            conversacio["id"] = cursor.execute("INSERT INTO conversations (user_id, session_id, model_id, nom, stream, options, messages, metadades, data_creacio, data_modificacio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            conversacio["id"] = cursor.execute("INSERT INTO conversations (user_id, session_id, model_id, nom, stream, think, options, messages, metadades, data_creacio, data_modificacio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (conversacio["user_id"], conversacio["session_id"], conversacio["model_id"], conversacio["nom"], 
-            conversacio["stream"], conversacio["options"], conversacio["messages"], conversacio["metadades"], data_ara, data_ara)).lastrowid
+            conversacio["stream"], conversacio["think"], conversacio["options"], conversacio["messages"], conversacio["metadades"], data_ara, data_ara)).lastrowid
         return conversacio["id"]
+
+async def modelFromPerfil(perfil_id: int):
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        model_id = cursor.execute("SELECT model_id FROM perfil WHERE id = ?", (perfil_id,)).fetchone()[0]
+        return model_id
+
+async def recuperaPerfils():
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        perfils = cursor.execute("SELECT id, nom_rol FROM perfil").fetchall()
+        return perfils
 
 # arranquem la API
 if __name__ == "__main__":
