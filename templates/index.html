@@ -1,42 +1,47 @@
 <!DOCTYPE html>
 <html lang="{{current_language}}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Private AI Hub</title>
     <!-- <link rel="stylesheet" href="/static/style.css"> -->
     <link rel="stylesheet" href="/static/style.css?v={{version}}">
+    <!-- Per no tenir tots els estils en un arxiu -->
+    <link rel="stylesheet" href="/static/files.css?v={{version}}">
+
     <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="/static/icons/favicon.ico">
-    <link rel="icon" href="/static/icons/favicon.png">    
+    <link rel="icon" href="/static/icons/favicon.png">
     <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
 
     <link rel="stylesheet" href="/static/vendor/katex.min.css">
 
 </head>
+
 <body>
     <div id="contenedor-principal">
         <header id="bloque-superior">
-         <div id="el-flexo">
-          <div>
-            <img alt="Private AI Hub logo" src="/static/icons/favicon.svg" width="32px">
-            <h1>Private AI Hub</h1><span id="author" idio="byAuthor">{{byAuthor}}</span>
-          </div>
-          <div id="idibox">
-            <img id="idi" src="/static/icons/idioma_MVM.svg" alt="Select Language">
-            <select id="idioma" >
-              <option value="en" {% if current_language == 'en' %}selected{% endif %}>English</option>
-              <option value="es" {% if current_language == 'es' %}selected{% endif %}>Español</option>
-              <option value="ca" {% if current_language == 'ca' %}selected{% endif %}>Català</option>
-            </select>
-          </div>
-         </div>
+            <div id="el-flexo">
+                <div>
+                    <img alt="Private AI Hub logo" src="/static/icons/favicon.svg" width="32px">
+                    <h1>Private AI Hub</h1><span id="author" idio="byAuthor">{{byAuthor}}</span>
+                </div>
+                <div id="idibox">
+                    <img id="idi" src="/static/icons/idioma_MVM.svg" alt="Select Language">
+                    <select id="idioma">
+                        <option value="en" {% if current_language=='en' %}selected{% endif %}>English</option>
+                        <option value="es" {% if current_language=='es' %}selected{% endif %}>Español</option>
+                        <option value="ca" {% if current_language=='ca' %}selected{% endif %}>Català</option>
+                    </select>
+                </div>
+            </div>
             <hr>
         </header>
         <main id="bloque-central">
             <div id="mensaje-inicial" style="font-style: italic;">
                 ...waiting a message / esperando un mensaje / esperant un missatge
-            </div>            
+            </div>
         </main>
         <footer id="bloque-inferior">
             <!-- Formulario de envío DE MOMENTO POR JAVASCRIPT -->
@@ -44,36 +49,47 @@
                 <select id="perfil">
                     <option value="{{perfils[0][0]}}">{{perfils[0][1]}}</option>
                     {% for perfil in perfils[1:] %}
-                        <option value="{{perfil[0]}}">{{perfil[1]}}</option>
+                    <option value="{{perfil[0]}}">{{perfil[1]}}</option>
                     {% endfor %}
                 </select>
                 <div style="display: flex;">
                     <!-- de moment mantenim input tipus text -->
-                    <textarea id="el-mensaje" name="mensaje"
-                    placeholder="{{msgPlaceholder}}" idio-place="msgPlaceholder" rows="1"></textarea>               
-                    <!-- botó deshabilitat pq no tindrà text per enviar d'entrada -->
-                    <button type="submit" id="enviar" disabled="true" idio="sendButton">{{sendButton}}</button>
+                    <textarea id="el-mensaje" name="mensaje" placeholder="{{msgPlaceholder}}"
+                        idio-place="msgPlaceholder" rows="1"></textarea>
+                    <div id="botons">
+                        <!-- botó deshabilitat pq no tindrà text per enviar d'entrada -->
+                        <button type="submit" id="enviar" disabled="true" idio="sendButton">{{sendButton}}</button>
+                        <div id="afegir_arch">&#9547</div>
+                    </div>
                 </div>
+                <div id="arxius"></div>
             </form>
             <!-- FIN DEL FORMULARIO -->
-            
+
         </footer>
 
     </div>
     <div id="content">
-        
+
     </div>
-<!-- IMPORTANT: ESTÀ DESHABILITAT PERQUÈ CARREGUI I NO FACI CACHÉ
+    <!-- IMPORTANT: ESTÀ DESHABILITAT PERQUÈ CARREGUI I NO FACI CACHÉ
 <script src="/static/app.js"></script>
 -->
+    <script>
+        const alertes = {
+            mida: "{{mida}}",
+            inclos: "{{inclos}}"
+        };
+    </script>
+    <!-- llibreries externes -->
+    <script src="/static/vendor/marked.umd.min.js"></script>
+    <script src="/static/vendor/purify.min.js"></script>
+    <script src="/static/vendor/katex.min.js"></script>
+    <script src="/static/vendor/auto-render.min.js"></script>
 
-<!-- llibreries externes -->
-<script src="/static/vendor/marked.umd.min.js"></script>
-<script src="/static/vendor/purify.min.js"></script>
-<script src="/static/vendor/katex.min.js"></script>
-<script src="/static/vendor/auto-render.min.js"></script>
-
-<!-- codi generat per mi -->
-<script src="/static/app.js?v={{version}}"></script>
+    <!-- codi generat per mi -->
+    <script src="/static/app.js?v={{version}}"></script>
+    <script src="/static/files.js?v={{version}}"></script>
 </body>
+
 </html>

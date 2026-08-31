@@ -1,0 +1,81 @@
+    #afegir_arch {
+        text-align: center;
+        align-items: center;
+        align-self: center;
+        padding: 0px 6px 10px 6px;
+        margin: 2px 4px;
+        width: 1em;
+        height: 1em;
+        border-radius: 50%;
+        cursor: pointer;
+        background-color: lightgray;
+        color: black;
+    }
+
+    #afegir_arch:hover {
+        background-color: gray;
+        color: white;
+    }
+
+    #arxius, .arxiusE {
+        display: flex;
+        font-family: sans-serif;
+        gap: 2px;
+        margin-top: 2px;
+    }
+
+    .cada_arx {
+        display: flex;
+        position: relative;
+        border-radius: 6px;
+        /* border-color: blue; */
+        max-width: 150px;
+        min-width: 80px;
+        /* border-width: 2px; */
+        border: thin solid blue;
+        height: 25px;
+        /* size: 40px 40px; */
+        /* margin: 5px; */
+        padding: 4px;
+        gap: 4px;
+        /* overflow: hidden; */
+        background-color: white;
+        color: blue;
+        font-size: 0.8em;
+    }
+    .cada_arx:hover {
+        cursor:default;    
+    }
+
+    .esborra {
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        font-size: 0.6em;
+        background-color: red;
+        color: white;
+        padding: 2px 4px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .esborra:hover {
+        background-color: rgb(255, 99, 99);
+    }
+
+    .arx_tipus {
+        display: inline-block;
+        block-size: 20px;
+        background-color: gray;
+        font-weight: bold;
+        font-size: large;
+        padding: 2px;
+        color: white;
+    }
+
+    .arx_nom {
+        display: inline-box;
+        overflow: hidden;
+        white-space: nowrap;
+        align-self: center;
+    }

@@ -2,5 +2,7 @@
     "byAuthor": "por Manuel Vázquez",
     "msgPlaceholder": "Escribe tu mensaje...",
     "sendButton": "Enviar",
-    "defaultChatName": "Chat sin nombre"
+    "defaultChatName": "Chat sin nombre",
+    "mida": "El tamaño del archivo excede el límite permitido",
+    "inclos": "Documento ya incluido"
 }

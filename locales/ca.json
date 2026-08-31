@@ -2,5 +2,7 @@
     "byAuthor": "per Manuel Vázquez",
     "msgPlaceholder": "Escriu el teu missatge...",
     "sendButton": "Enviar",
-    "defaultChatName": "Xat sense nom"
+    "defaultChatName": "Xat sense nom",
+    "mida": "La mida d'arxius sobrepassa el permés",
+    "inclos": "Document ja inclòs"
 }

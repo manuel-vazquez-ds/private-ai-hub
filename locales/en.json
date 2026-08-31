@@ -2,5 +2,7 @@
     "byAuthor": "by Manuel Vázquez",
     "msgPlaceholder": "Write your message...",
     "sendButton": "Send",
-    "defaultChatName": "Unnamed Chat"
+    "defaultChatName": "Unnamed Chat",
+    "mida": "File size exceeds the allowed limit",
+    "inclos": "Document already included"
 }

@@ -69,6 +69,14 @@ body, html {
     width: 100%; max-width: 600px;
     flex-direction: column;
 }
+#botons{ display: flex;
+    flex-direction: column;
+}
+.bloc_espera{
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: not-allowed;
+}
 /* #el-mensaje{ flex-grow: 1;
     padding: 10px;
     border: 1px solid #2196F3;
