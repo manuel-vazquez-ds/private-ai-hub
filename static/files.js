@@ -3,7 +3,8 @@ const arxius = document.getElementById("arxius");
 
 const selec_arxiu = document.createElement("input");
 selec_arxiu.type = "file";
-selec_arxiu.accept = ".txt,.md";
+// selec_arxiu.accept = ".txt,.md";
+selec_arxiu.accept = ".txt,.md,.csv,.psv,.tsv,.xls,.xlsx,.ods";
 
 
 selec_arxiu.addEventListener('change', (event) => {
@@ -21,7 +22,10 @@ selec_arxiu.addEventListener('change', (event) => {
     }
 });
 
-const col_ext = { txt: "#A9A9A9", md: "#1E90FF", pdf: "#FF0000", csv: "#228b22a9", xls: "#228B22" }
+// const col_ext = { txt: "#A9A9A9", md: "#1E90FF", pdf: "#FF0000", csv: "#228b22a9", xls: "#228B22" }
+const CEXT= { base: "#A9A9A9", markdown: "#1E90FF" , tables: "#228B22" , pdf: "#FF0000" };
+const col_ext = { txt: CEXT.base, md: CEXT.markdown, pdf: CEXT.pdf,
+    csv: CEXT.tables, psv: CEXT.tables, tsv: CEXT.tables, xls: CEXT.tables, xlsx: CEXT.tables, ods: CEXT.tables };
 // const alertes = { mida: "Mida d'arxius sobrepassa el permés", inclos: "Document ja inclòs" }
 const mida_max = 1024 * 1024; // 1 MB
 // const mida_max = 4096; // 4 KB

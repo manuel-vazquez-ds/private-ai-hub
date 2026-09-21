@@ -1,10 +1,16 @@
 import sqlite3
 import extractors.extract_text as et
+import extractors.extract_csv as ec
+import extractors.extract_xl as ex
+
 MIDA_MAXIMA_FITXERS = 1024 * 1024  # 1 MB
 # MIDA_MAXIMA_FITXERS = 10 * 1024  # 10 KB
 CONTINGUT_MAXIM = 200 * 1024  # 200 KB
-EXTENSIONS_PERMESES = [".txt", ".md"] # Més endavant afegirem més
-CONTEXTS_PERMESOS = ["text/plain", "text/markdown"] # Més endavant afegirem més
+EXTENSIONS_PERMESES = [".txt", ".md", ".csv",".psv",".tsv", ".xlsx",".xls",".ods"] # Més endavant afegirem més
+CONTEXTS_PERMESOS = ["text/plain", "text/markdown", "text/csv", "application/csv", "text/plain",
+            "text/tab-separated-values", "text/comma-separated-values", "text/psv-separated-values",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel",
+             "application/octet-stream", "application/vnd.oasis.opendocument.spreadsheet"] # Més endavant afegirem més
 INFORMACIO_ADDICIONAL = """
 IMPORTANT: Try to answer in the same language as the user.
 User can upload files that can serve to help me answer the question. I will attach to the prompt in this structure:
@@ -51,9 +57,19 @@ async def processar_arxius(missatge, arxius):
     arxius_content = []
     contingut += f"\n=== USER ATTACHED {len(arxius)} FILES ===\n"
     for i, arxiu in enumerate(arxius, start=1):
-        if arxiu.content_type == "text/plain" or arxiu.content_type == "text/markdown" \
-        or arxiu.filename.endswith((".txt", ".md")):
+        resultat = ""
+        # if arxiu.content_type == "text/plain" or arxiu.content_type == "text/markdown" \
+        # or arxiu.filename.endswith((".txt", ".md")):
+        if arxiu.content_type in ("text/plain", "text/markdown") and arxiu.filename.endswith((".txt", ".md")):
             resultat =  await et.extreu(arxiu)
+        elif arxiu.content_type in ("text/csv", "application/csv", "text/plain",
+            "text/tab-separated-values", "text/comma-separated-values", "text/psv-separated-values") and arxiu.filename.endswith((".csv",".psv",".tsv")):
+            resultat = await ec.extreu(arxiu)
+        elif arxiu.content_type in ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel",
+            "application/octet-stream", "application/vnd.oasis.opendocument.spreadsheet") and arxiu.filename.endswith((".xlsx",".xls",".ods")):
+            resultat = await ex.extreu(arxiu)
+        else:
+            resultat = "=== File type not supported ===\n"
 
         contingut += f"=== FILE {i} ===\n"
         contingut += f"=== FILE NAME: {arxiu.filename} ===\n"

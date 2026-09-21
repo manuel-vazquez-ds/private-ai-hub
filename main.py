@@ -144,6 +144,8 @@ except Exception as e:
 
 # ca: URL del proveïdor per defecte, en principi Ollama
 llmProvider = "http://localhost:11434/api/chat"
+# ca: per unsloth, per exemple
+# llmProvider = "http://127.0.0.1:8888/v1/chat/completions" # NO FUNCIONA PER ARA
 
 privateAIH = FastAPI(title="Private AI Hub", version="0.3.0")
 

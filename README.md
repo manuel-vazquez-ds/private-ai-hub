@@ -9,13 +9,15 @@ Private AI Hub is a local-first AI collaboration platform that enables interacti
 
 ## Current status
 
-🚧 Development phase
+🚧 Development phase, version 0.5.0
 
 ## MVP roadmap
 
 - [x] Frontend proof of concept
 - [x] FastAPI backend
 - [x] Local LLM integration with Ollama
-- [ ] File processing
+- [x] File processing
+- [x] Extractors from many table format files
+- [x] Extractors from many text format files
 - [x] Multilingual interface
 - [x] Profile selector
