@@ -4,7 +4,7 @@ const arxius = document.getElementById("arxius");
 const selec_arxiu = document.createElement("input");
 selec_arxiu.type = "file";
 // selec_arxiu.accept = ".txt,.md";
-selec_arxiu.accept = ".txt,.md,.csv,.psv,.tsv,.xls,.xlsx,.ods";
+selec_arxiu.accept = ".txt,.md,.csv,.psv,.tsv,.xls,.xlsx,.ods,.pdf";
 
 
 selec_arxiu.addEventListener('change', (event) => {

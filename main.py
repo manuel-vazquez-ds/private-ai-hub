@@ -93,22 +93,10 @@ try:
 
         users_data_ini = ("AnonUser",)
         # ca: Per més d'un perfil i model
-        # models_data_ini = [("gemma4:12b-it-qat", "Gemma 4", '{"temperature":0.3,"num_ctx":16384, "top_k":35,"top_p":0.9,"repeat_penalty":1.2}'),
-        #                   ("qwen3.6:latest", "Qwen 3.6", '{"temperature":0.5,"num_ctx":32768, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}'),
-        #                   ("qwen3.5:4b", "Qwen 3.5 4B", '{"temperature":1.1,"num_ctx":16384, "top_k":30,"top_p":0.75,"repeat_penalty":1.1}')]
         models_data_ini = [("gemma4:12b-it-qat", "Gemma 4", '{"temperature":0.3,"num_ctx":131072, "top_k":35,"top_p":0.9,"repeat_penalty":1.2}'),
                           ("qwen3.6:latest", "Qwen 3.6", '{"temperature":0.5,"num_ctx":262144, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}'),
                           ("qwen3.5:4b", "Qwen 3.5 4B", '{"temperature":1.1,"num_ctx":131072, "top_k":30,"top_p":0.75,"repeat_penalty":1.1}'),
                           ("qwen3.8:27b", "Qwen 3.8", '{"temperature":0.5,"num_ctx":262144, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}')]
-        # perfil_data_ini = [("Analyst / Analista", 1,
-        #                 "Mi rol principal eres un analista estadístico, si puedes responde con estos términos y en el idioma del mensaje", '{}',"true"),
-        #                 ("Generalist expert / Experto generalista / Expert generalista", 2,
-        #                 "Soy un experto en cualquier área, que además de dar la respuesta más adecuada según el tipo de pregunta, también puede ofrecer consejos y recomendaciones.", '{}',"true"),
-        #                 ("Fast Responder / Respondedor Rápido / Responedor Ràpid", 3,
-        #                 "Person who answers instantly, assuming knowledge without deep thinking; speed over accuracy. No thinking.", '{}',"false"),
-        #                 ("Cultured Thinker / Pensador Culto / Pensador Culte", 1,
-        #                 "Mi rol principal es de una persona con conocimiento amplio, buen razonamiento y cultura sólida; inteligente sin ser erudito, si puedes responde con estos términos y en el idioma del mensaje",
-        #                  '{"temperature":0.5, "top_k":40, "repeat_penalty":1.1}', "true")]
         perfil_data_ini = [["Analyst / Analista", 1,
                         "Mi rol principal eres un analista estadístico.", '{}',"true"],
                         ["Generalist expert / Experto generalista / Expert generalista", 2,
@@ -280,7 +268,6 @@ async def chat(request: Request,
 
                 # conversacio["messages"] = json.dumps(missatges)
                 # conversacio["metadades"] = json.dumps(metadades)
-                # await guarda_conversacio(conversacio, pregunta, resposta, missatge_system)
                 await guarda_conversacio(conversacio, pregunta, resposta, missatge_system, arxius_content)
                 
             else:
@@ -381,6 +368,19 @@ async def localitza_una(session_id:str, user_id: int, conversacio_id: int, perfi
 
 async def envia_missatge(model_nom, stream, opcions, missatges, elThink)-> requests:
     # print(json.dumps({"model": model_nom, "messages": missatges, "stream": stream, "think": elThink, "options": opcions}))
+    ### AQUEST TROÇ Es PER CAPTURAR LA CRIDA EN UN ARXIU
+    #
+    jfitxer = f".proves/ollama_request_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
+    # with open(jfitxer, "w", encoding="utf-8") as f:
+    #     json.dump({
+    #         "model": model_nom,
+    #         "messages": missatges,
+    #         "stream": stream,
+    #         "think": elThink,
+    #         "options": opcions
+    #     }, f, ensure_ascii=False)
+    #
+    ###
     return requests.post(llmProvider, json={"model": model_nom, "messages": missatges, "stream": stream, "think": elThink, "options": opcions}, verify=False)
 
 # async def guarda_conversacio(conversacio: dict):

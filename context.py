@@ -2,15 +2,17 @@ import sqlite3
 import extractors.extract_text as et
 import extractors.extract_csv as ec
 import extractors.extract_xl as ex
+import extractors.extract_pdf as ep
 
 MIDA_MAXIMA_FITXERS = 1024 * 1024  # 1 MB
 # MIDA_MAXIMA_FITXERS = 10 * 1024  # 10 KB
 CONTINGUT_MAXIM = 200 * 1024  # 200 KB
-EXTENSIONS_PERMESES = [".txt", ".md", ".csv",".psv",".tsv", ".xlsx",".xls",".ods"] # Més endavant afegirem més
+EXTENSIONS_PERMESES = [".txt", ".md", ".csv",".psv",".tsv", ".xlsx",".xls",".ods", ".pdf"] # Més endavant afegirem més
 CONTEXTS_PERMESOS = ["text/plain", "text/markdown", "text/csv", "application/csv", "text/plain",
             "text/tab-separated-values", "text/comma-separated-values", "text/psv-separated-values",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel",
-             "application/octet-stream", "application/vnd.oasis.opendocument.spreadsheet"] # Més endavant afegirem més
+             "application/octet-stream", "application/vnd.oasis.opendocument.spreadsheet",
+             "application/pdf"] # Més endavant afegirem més
 INFORMACIO_ADDICIONAL = """
 IMPORTANT: Try to answer in the same language as the user.
 User can upload files that can serve to help me answer the question. I will attach to the prompt in this structure:
@@ -68,6 +70,8 @@ async def processar_arxius(missatge, arxius):
         elif arxiu.content_type in ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel",
             "application/octet-stream", "application/vnd.oasis.opendocument.spreadsheet") and arxiu.filename.endswith((".xlsx",".xls",".ods")):
             resultat = await ex.extreu(arxiu)
+        elif arxiu.content_type == "application/pdf" and arxiu.filename.endswith(".pdf"):
+            resultat = await ep.extreu(arxiu)
         else:
             resultat = "=== File type not supported ===\n"
 

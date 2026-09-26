@@ -65,22 +65,74 @@ function afegirMsgPrompt(text) {
 function afegirMsgResponse(text) {
   return afegirMissatge(text, "msgresponse");
 }
+// function crearMsgStatus() {
+//   const node = document.createElement("div");
+//   node.classList.add("msgstatus");
+//   node.textContent = "Thinking... / Pensando... / Pensant...";
+//   bloqueCentral.appendChild(node);
+//   return {
+//     node: node,
+//     inici: performance.now()
+//   };
+// }
+// function finalitzarMsgStatus(status) {
+//   const temps = ((performance.now() - status.inici) / 1000).toFixed(2);
+//   status.node.classList.add("msgstatusfinal");
+//   status.node.classList.remove("msgstatus");
+//   status.node.textContent = `Thought... / Pensado... / Pensat... (${temps}s.)`;
+// }
+
 function crearMsgStatus() {
   const node = document.createElement("div");
   node.classList.add("msgstatus");
-  node.textContent = "Thinking... / Pensando... / Pensant...";
   bloqueCentral.appendChild(node);
+
+  const inici = performance.now();
+
+  const actualizar = () => {
+    const temps = Math.floor((performance.now() - inici) / 1000);
+    node.textContent = `Thinking... / Pensando... / Pensant... (${temps}s.)`;
+  };
+
+  actualizar();
+
+  const interval = setInterval(actualizar, 1000);
+
   return {
     node: node,
-    inici: performance.now()
+    inici: inici,
+    interval: interval
   };
 }
-function finalitzarMsgStatus(status) {
+
+
+// function finalitzarMsgStatus(status) {
+//   clearInterval(status.interval);
+
+//   const temps = ((performance.now() - status.inici) / 1000).toFixed(2);
+
+//   status.node.classList.add("msgstatusfinal");
+//   status.node.classList.remove("msgstatus");
+//   status.node.textContent = `Thought... / Pensado... / Pensat... (${temps}s.)`;
+// }
+
+function finalitzarMsgStatus(status, error = null) {
+  clearInterval(status.interval);
+
   const temps = ((performance.now() - status.inici) / 1000).toFixed(2);
+
   status.node.classList.add("msgstatusfinal");
   status.node.classList.remove("msgstatus");
-  status.node.textContent = `Thought... / Pensado... / Pensat... (${temps}s.)`;
+
+  if (error) {
+    // status.node.textContent = `Error: ${error.message}`;
+    status.node.textContent = `Error: ${error.message} (${temps}s.)`;
+  } else {
+    status.node.textContent =
+      `Thought... / Pensado... / Pensat... (${temps}s.)`;
+  }
 }
+
 
 bloqueFormulario.addEventListener('submit', async (e) => {
   // console.log("Submit handler called"); // Add this
@@ -109,18 +161,6 @@ bloqueFormulario.addEventListener('submit', async (e) => {
 
   botons.disabled = true;
 
-  // try {
-  //   const resposta = await fetch("/chat", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({
-  //       message: mensaje.value.trim(),
-  //       conversacio_id: currentConversationId,
-  //       perfil_id: perfilSelect.value
-  //     }),
-  //   });
   try {
     const formData = new FormData();
     llista_arxius.forEach(arxiu => {
@@ -150,9 +190,10 @@ bloqueFormulario.addEventListener('submit', async (e) => {
     perfilSelect.disabled = true;
   } catch (error) {
     console.error(error);
-    estat.node.classList.add("msgstatusfinal");
-    estat.node.classList.remove("msgstatus");
-    estat.node.textContent = `Error: ${error.message}`;
+    // estat.node.classList.add("msgstatusfinal");
+    // estat.node.classList.remove("msgstatus");
+    // estat.node.textContent = `Error: ${error.message}`;
+    finalitzarMsgStatus(estat, error);
   } finally {
     bloqueCentral.scrollTop = bloqueCentral.scrollHeight;
     mensaje.value = "";
