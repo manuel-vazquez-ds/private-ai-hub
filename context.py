@@ -102,3 +102,21 @@ def recupera_arxius(del_missatge):
             contingut += "\n===\n"
         contingut += "=== END USER ATTACHED FILES ===\n"
     return contingut
+
+def recupera_noms_arxius(del_missatge, adjunts_idioma):
+    """
+    Recupera els noms dels arxius del missatge.
+    """
+    prAIHdb = sqlite3.connect('prAIH.db')
+    # prAIHdb.row_factory = sqlite3.Row
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        contingut= del_missatge[0]
+        arxius_del_missatge = cursor.execute("SELECT ordre, name FROM arxius WHERE missatge_id = ? ORDER BY ordre", (del_missatge[1],)).fetchall()
+    if arxius_del_missatge:
+        # contingut += f"\n\n{adjunts_idioma}\n--------------------------------\n"
+        contingut += f"\n\n{adjunts_idioma}\n--------------------------------"
+        for arxiu in arxius_del_missatge:
+            # contingut += f"{arxiu[1]}\n\n"
+            contingut += f"\n{arxiu[1]}  "
+    return contingut

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, sta
 # from fastapi.params import Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from typing import List, Optional
 
@@ -15,13 +15,14 @@ import time, datetime
 from fastapi import Cookie
 # ca: per fer les crides importem requests i ollama
 import requests
-import ollama
+# import ollama
 # ca: per fer la base de dades, i per fer identificadors únics
 import sqlite3
 import uuid
 
 # ca: a partir d'aquí, importacions de les meves llibreries
 import context as ctx
+import fitx_gen as fg
 
 templates = Jinja2Templates(
     directory="templates"
@@ -160,6 +161,10 @@ async def privateAIH_root(request: Request):
         "sendButton": translations.get("sendButton", "Send"),
         "mida": translations.get("mida", "File size exceeds the allowed limit"),
         "inclos": translations.get("inclos", "Document already included"),
+        "answer": translations.get("answer", "Answer"),
+        "descConvers": translations.get("descConvers", "Download entire conversation"),
+        "txt": translations.get("txt", "Download as text"),
+        "md": translations.get("md", "Download as Markdown"),
         # afegim una versió per forçar la recàrrega dels fitxers estàtics
         "version": int(time.time()),
         "current_language": current_language,
@@ -268,7 +273,8 @@ async def chat(request: Request,
 
                 # conversacio["messages"] = json.dumps(missatges)
                 # conversacio["metadades"] = json.dumps(metadades)
-                await guarda_conversacio(conversacio, pregunta, resposta, missatge_system, arxius_content)
+                # await guarda_conversacio(conversacio, pregunta, resposta, missatge_system, arxius_content)
+                conversacio_id, missatge_id = await guarda_conversacio(conversacio, pregunta, resposta, missatge_system, arxius_content)
                 
             else:
                 # resposta = "Error en la crida al LLM"
@@ -280,7 +286,8 @@ async def chat(request: Request,
             pass
         # fem sols la part de l'assistant
 
-        return JSONResponse({"response": f"{resposta['message']['content']}\n","conversacio_id": conversacio["id"]})
+        return JSONResponse({"response": f"{resposta['message']['content']}\n","conversacio_id": conversacio_id,"missatge_id": missatge_id})
+        # return JSONResponse({"response": f"{resposta['message']['content']}\n","conversacio_id": conversacio["id"]})
         # return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{resposta['message']['content']}\n","conversacio_id": conversacio["id"]})
         # return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{resposta['message']}\n"})
         # return JSONResponse({"response": f"Sent / Enviado / Enviat:\n\n{resposta}\n"})
@@ -406,9 +413,11 @@ async def guarda_conversacio(conversacio: dict, pregunta: dict, resposta: dict, 
         
         # afegir_missatge(conversacio["id"], pregunta, data_ara)
         afegir_missatge(conversacio["id"], pregunta, data_ara, arxius_content)
-        afegir_missatge(conversacio["id"], resposta, data_ara)
-
-        return conversacio["id"]
+        # afegir_missatge(conversacio["id"], resposta, data_ara)
+        # return conversacio["id"]
+        # El de la resposta el mirem de retornar amb el missatge_id
+        missatge_id = afegir_missatge(conversacio["id"], resposta, data_ara)
+        return (conversacio["id"], missatge_id)
 
 
 async def modelFromPerfil(perfil_id: int):
@@ -457,6 +466,86 @@ def afegir_missatge(la_conversacio:int, resposta:dict, data_ara=None, arxius_con
             for arxiu in arxius_content:
                 cursor.execute("INSERT INTO arxius (missatge_id,ordre,name,content,data_creacio) VALUES (?,?,?,?,?)",
                                 (missatge_id, arxiu["ordre"], arxiu["name"], arxiu["content"], data_ara))
+
+    return missatge_id
+
+@privateAIH.get("/missatge/{id_missatge}/descarregar")
+async def descarregar_missatge(id_missatge: int, format: str):
+    global translations
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        missatge_t = cursor.execute("SELECT content, data_creacio FROM messages WHERE id = ? LIMIT 1", (id_missatge,)).fetchone()
+
+    # Buscar el mensaje en SQLite
+    # mensaje = obtener_mensaje(id_missatge)
+
+    if missatge_t is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Message not found / Mensaje no encontrado / Missatge no trobat"
+        )
+
+    # ca: No es None, passem a diccionari per fer la consulta
+    missatge_t = dict(zip(['content', 'data_creacio'], missatge_t))
+    missatge_t["format"]= format
+    missatge_t["answer"] = translations.get("answer", "Answer")
+
+    components = fg.fitxerDeResposta(missatge_t)
+
+    return Response(
+        content=components["dades"],
+        media_type=components["mediaType"],
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="{components["nomFitx"]}"'
+        }
+    )
+
+@privateAIH.get("/conversacio/{id_conversacio}/descarregar")
+async def recupera_conversacio(id_conversacio:int, format: str):
+    global translations
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        conversacio_t = cursor.execute("SELECT data_modificacio FROM conversations WHERE id = ? LIMIT 1", (id_conversacio,)).fetchone()
+    if conversacio_t is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found / Conversación no encontrada / Conversació no trobada"
+        )
+    conversacio_t = conversacio_t[0]
+
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        # ca: Excluim el missatge del sistema
+        missatges= cursor.execute("SELECT role, content, id FROM messages WHERE conversacio_id = ? ORDER BY id", (id_conversacio,)).fetchall()[1:]
+        cadenaConversacio = ""
+        claus= ("role","content")
+        # for missatge in missatges:
+        #     llista_missatges.append(dict(zip(claus,missatge)))
+
+        for missatge in missatges:
+            missatge_ext =dict(zip(claus,missatge[:2]))
+            missatge_ext["content"] = ctx.recupera_noms_arxius(missatge[1:], translations.get("attachedFiles", "Attached files\n--------------------------------\n"))
+            role = translations["userAsked"] if missatge_ext["role"] == "user" else translations["assistantAnswered"]
+            cadenaConversacio += f"{role}{missatge_ext['content']}\n"
+            cadenaConversacio += "\n--------------------------------\n\n"
+        
+        # ca:aprofitem l'estructura de missatge_T
+        conversacio_t =dict(zip(['content', 'data_creacio'], (cadenaConversacio, conversacio_t)))
+        conversacio_t["format"] = format
+        # conversacio_t["conversation"] = translations.get("conversation", "Conversation")
+        conversacio_t["answer"] = translations.get("conversation", "Conversation")
+
+    components = fg.fitxerDeResposta(conversacio_t)
+
+    return Response(
+        content=components["dades"],
+        media_type=components["mediaType"],
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="{components["nomFitx"]}"'
+        }
+    )
 
 # arranquem la API
 if __name__ == "__main__":

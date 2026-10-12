@@ -27,14 +27,46 @@
                     <img alt="Private AI Hub logo" src="/static/icons/favicon.svg" width="32px">
                     <h1>Private AI Hub</h1><span id="author" idio="byAuthor">{{byAuthor}}</span>
                 </div>
-                <div id="idibox">
+                <!-- <div id="idibox">
                     <img id="idi" src="/static/icons/idioma_MVM.svg" alt="Select Language">
                     <select id="idioma">
                         <option value="en" {% if current_language=='en' %}selected{% endif %}>English</option>
                         <option value="es" {% if current_language=='es' %}selected{% endif %}>Español</option>
                         <option value="ca" {% if current_language=='ca' %}selected{% endif %}>Català</option>
                     </select>
-                </div>
+                </div> -->
+                <div id="blocbox">
+                    <div class="desplegable disabled" id="descarregar">
+                        <!-- <button class="desplegable-toggle" type="button">
+                            📥 Descargar
+                        </button> -->
+                        <!-- <div class = "desplegable-header disabled"> -->
+                        <div class = "desplegable-header" idio-tool="descConvers" data-tooltip="{{descConvers}}">
+                            <img class="descarregables" src="/static/descarrega_MVM.svg" alt="{{descConvers}}">
+                            <!-- <img class="descarregables" src="/static/descarrega_MVM.svg" alt="Descargar"> -->
+                            <!-- <span>📥 Descargar</span> -->
+                        </div>
+
+                        <div class="desplegable-menu">
+                            <button type="button" data-format="txt" data-tooltip="{{txt}}">
+                                <!-- <img class="descarregables" src="/static/des_TXT02_MVM.svg" alt="Descargar en formato texto"> -->
+                                <img class="descarregables" src="/static/des_TXT02_MVM.svg" alt="{{txt}}">
+                            </button>
+                            <button type="button" data-format="md" data-tooltip="{{md}}">
+                                <!-- <img class="descarregables" src="/static/des_MD02_MVM.svg" alt="Descargar en formato markdown"> -->
+                                <img class="descarregables" src="/static/des_MD02_MVM.svg" alt="{{md}}">
+                            </button>
+                        </div>
+                    </div>
+                    <div id="idibox">
+                        <img id="idi" src="/static/icons/idioma_MVM.svg" alt="Select Language">
+                        <select id="idioma">
+                            <option value="en" {% if current_language=='en' %}selected{% endif %}>English</option>
+                            <option value="es" {% if current_language=='es' %}selected{% endif %}>Español</option>
+                            <option value="ca" {% if current_language=='ca' %}selected{% endif %}>Català</option>
+                        </select>
+                    </div>
+                </div> 
             </div>
             <hr>
         </header>
@@ -80,6 +112,12 @@
             mida: "{{mida}}",
             inclos: "{{inclos}}"
         };
+        let traduccions ={
+            answer: "{{answer}}",
+            descConvers: "{{descConvers}}",
+            txt: "{{txt}}",
+            md: "{{md}}"
+        };
     </script>
     <!-- llibreries externes -->
     <script src="/static/vendor/marked.umd.min.js"></script>
@@ -88,7 +126,8 @@
     <script src="/static/vendor/auto-render.min.js"></script>
 
     <!-- codi generat per mi -->
-    <script src="/static/app.js?v={{version}}"></script>
+    <!-- <script src="/static/app.js?v={{version}}"></script> -->
+    <script type="module" src="/static/app.js?v={{version}}"></script>
     <script src="/static/files.js?v={{version}}"></script>
 </body>
 

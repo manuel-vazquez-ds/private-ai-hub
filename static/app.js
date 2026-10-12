@@ -2,6 +2,8 @@
 // ja hem fet les proves del scroll
 // he canviat bloqueCentral.innerHTML per
 // bloqueCentral.textContent segons chatgpt
+import { crearOpcionsDescarrega } from "./descarregues.js";
+
 const textDeProva = "...waiting a message / esperando un mensaje / esperant un missatge";
 const mensajeEnvido = "<div style='padding: 5px 0px;'><b>Missatge enviat:</b><br></div>";
 const bloqueCentral = document.getElementById("bloque-central");
@@ -16,13 +18,48 @@ const perfilSelect = document.getElementById("perfil");
 const botons = document.getElementById("botons");
 let currentConversationId = null;
 let enviant = false;
+// let traduccions = {};
+
+const desplegable = document.getElementById("descarregar");
+// const toggle = desplegable.querySelector(".desplegable-toggle");
+// const toggle = desplegable.querySelector(".desplegable-header");
+
+
+// toggle.addEventListener("click", () => {
+//     desplegable.classList.toggle("open");
+// });
+
+function actualitzaEstatDescarrega() {
+    const dropdown = document.getElementById("descarregar");
+
+    dropdown.classList.toggle("disabled", !Number.isInteger(currentConversationId));
+}
+
+desplegable.querySelectorAll("[data-format]").forEach(opcion => {
+    opcion.addEventListener("click", () => {
+        const format = opcion.dataset.format;
+
+        // descargar conversación
+        window.location.href = `/conversacio/${currentConversationId}/descarregar?format=${format}`;
+        // console.log(format);
+
+        // desplegable.classList.remove("open");
+    });
+});
+
+// desplegable.hidden = !currentConversationId;
+
+// ca: a l'haver passat a mòdul app.js, ara, les variables no es veuen fora.
+window.enviant = enviant
 
 mensaje.addEventListener('input', () => {
   // Si el texto limpio es igual a "", 'disabled' será true.
   botonEnviar.disabled = mensaje.value.trim() === '';
 });
-function afegirMissatge(text, tipus) {
+// function afegirMissatge(text, tipus) {
+function afegirMissatge(text, tipus, id_missatge=null) {
   // console.log("Afegir missatge");
+  // console.log("afegirMissatge", id_missatge);
   const node = document.createElement("div");
   node.classList.add(tipus);
   if (tipus !== "msgresponse") {
@@ -55,6 +92,10 @@ function afegirMissatge(text, tipus) {
         { left: "\\[", right: "\\]", display: true }
       ], throwOnError: false
     });
+    // const opcionsDescarrega = crearOpcionsDescarrega(id_missatge);
+    // console.log("Traduccions_1:", traduccions);
+    const opcionsDescarrega = crearOpcionsDescarrega(id_missatge, traduccions);
+    node.append(opcionsDescarrega);
   }
   bloqueCentral.appendChild(node);
   return node;
@@ -62,8 +103,10 @@ function afegirMissatge(text, tipus) {
 function afegirMsgPrompt(text) {
   return afegirMissatge(text, "msgprompt");
 }
-function afegirMsgResponse(text) {
-  return afegirMissatge(text, "msgresponse");
+// function afegirMsgResponse(text) {
+function afegirMsgResponse({text, id_missatge=null}) {
+  // console.log("afegirMsgResponse", id_missatge);
+  return afegirMissatge(text, "msgresponse", id_missatge);
 }
 // function crearMsgStatus() {
 //   const node = document.createElement("div");
@@ -185,9 +228,20 @@ bloqueFormulario.addEventListener('submit', async (e) => {
       throw new Error(data.detail);
     }
     currentConversationId = data.conversacio_id;
-    afegirMsgResponse(data.response);
+    const currentMissatge_id = data.missatge_id;
+    //afegirMsgResponse( data.response);
+    afegirMsgResponse({text: data.response, id_missatge: currentMissatge_id});
+    // afegirMsgResponse(text= data.response, id_missatge = currentMissatge_id);
     finalitzarMsgStatus(estat);
     perfilSelect.disabled = true;
+    // ca: fem visible descarregar
+    // const dsc = document.getElementById("descarregar");
+    // dsc.style.visibility = "visible";
+
+    // ca: trec el desplegable perque ara estarà visible i dehabilitada la capcelerea
+    // desplegable.style.display = "inline-block";
+
+    
   } catch (error) {
     console.error(error);
     // estat.node.classList.add("msgstatusfinal");
@@ -204,7 +258,9 @@ bloqueFormulario.addEventListener('submit', async (e) => {
     botons.disabled = false;
     enviant = false;
     canvia_form_estat();
-
+    
+    actualitzaEstatDescarrega();
+    
     mensaje.focus();
   }
 });
@@ -232,6 +288,8 @@ async function reclamaIdioma(quinIdioma) {
   });
   const nou_idioma = await response.json();
   // console.log(nou_idioma);
+  traduccions = nou_idioma;
+  // console.log("Traduccions_0:", traduccions);
   canvia_idioma(quinIdioma, nou_idioma);
 }
 
@@ -255,6 +313,22 @@ function canvia_idioma(amb_idioma, textos) {
     const cada = elemento.getAttribute('idio-place');
     elemento.setAttribute("placeholder", textos[cada]);
   });
+  document.querySelectorAll('[idio-tool]').forEach(elemento => {
+    // console.log(elemento.getAttribute('idio-tool'));
+    const cada = elemento.getAttribute('idio-tool');
+    elemento.setAttribute("data-tooltip", textos[cada]);
+    const imatge = elemento.querySelector('img');
+    imatge.setAttribute('alt', textos[cada]);
+    // imatge.alt = textos[cada];
+  });
+  document.querySelectorAll('[data-format]').forEach(elemento => {
+    // console.log(elemento.getAttribute('idio-tool'));
+    const cada = elemento.getAttribute('data-format');
+    elemento.setAttribute("data-tooltip", textos[cada]);
+    const imatge = elemento.querySelector('img');
+    imatge.setAttribute('alt', textos[cada]);
+  });
+
   document.documentElement.lang = amb_idioma;
   // ca: canviar els textos de les alertes
   alertes.mida = textos.mida;

@@ -35,6 +35,7 @@ body, html {
     text-align: left;
     display: block;
     min-height: 10%; /* Mínimo 10% de altura */
+    max-height: 15%; /* Máximo 10% de altura */
     box-sizing: border-box; /* Para que el padding no aumente el tamaño total */
 }
 
@@ -124,9 +125,24 @@ option {
     display: inline;
     width: 40px;
     height: 40px;
+    padding: 0;
+    gap: 0;
+    margin: 0;
 }
+
+.descarregables {
+    display: inline-block;
+    /* width: 32px;
+    height: 32px; */
+    padding: 0;
+    gap: 0;
+    margin: 0;
+    object-fit: contain;
+}
+
 #idibox {
     display: flex;
+    width: auto;
     align-items: center;
     gap: 10px;
 }
@@ -175,4 +191,166 @@ option {
     width: auto;
     margin: 10px 10px;
 
+}
+/* #idi {
+    display: inline;
+    width: 40px;
+    height: 40px;
+} */
+#blocbox {
+    display: flex;
+    /* display: inline; */
+    /* align-items: center;
+    align-items: end; */
+    align-items: flex-start;
+    gap: 0px 10px;
+}
+/* #descarregar {
+    width: 100px;
+    display: inline;
+    visibility: hidden;
+} */
+
+.desplegable {
+    position: relative;
+    /* ca: ara com a el tindrem deshabilitat, el mostrarem  de moment */
+    display: inline-block;
+    /* Ull! és la de display mpme, pero ho intentarem controlar amb JS */
+    /* display: none;  */
+    /* width: 100%; */
+    width: auto;
+    /* height: 1.5em; */
+
+}
+
+/* .desplegable-toggle {
+    width: 100%;
+    padding: 10px;
+    background: white;
+    border: 1px solid #2196F3;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+} */
+
+.desplegable-header img{
+    /* width: 100%; */
+    /* width: auto; */
+    padding: 2px;
+    background: white;
+    /* border: 1px solid #2196F3;
+    border-radius: 6px; */
+    font-size: 1em;
+    /* cursor: pointer; */
+    cursor: default;
+    display: flex;
+    align-items: center;
+    /* align-items: flex-start; */
+    width: 32px;
+    height: 32px;
+    /* height: 1.5em;
+    width: 1.5em; */
+}
+/* .desplegable-header.disabled {
+    opacity: 0.4;
+} */
+
+.desplegable.disabled .desplegable-header {
+    opacity: 0.4;
+}
+
+.desplegable-menu button img{
+    /* display: none;
+    position: absolute;
+    right: 0;
+    min-width: 60px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 4px 0;
+    z-index: 1000; */
+    object-fit: contain;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: white;
+    transition: transform 0.2s ease;
+}
+.desplegable-menu button {
+    border: none;
+    background: white;
+    cursor: pointer;
+}
+/* .desplegable-menu button:hover {
+    padding: 4px 5px;
+    background-color: white;
+} */
+.desplegable-menu button:hover img{
+    transform: scale(1.1);
+}
+/* .desplegable.open .desplegable-menu {
+    display: block;
+} */
+
+/* .desplegable-menu button {
+    display: flex;
+    width: 100%;
+    border: none;
+    background: none;
+    text-align: left;
+    padding: 8px 12px;
+    cursor: pointer;
+} */
+
+/* .desplegable-menu button:hover {
+    background: #eee;
+} */
+
+/* Solo se despliega si está activo */
+.desplegable:not(.disabled):hover .desplegable-menu {
+    display: block;
+    background: #eee;
+}
+
+.desplegable-menu {
+    display: none;
+    position: absolute;
+    /* right: 0; */
+    /* min-width: 60px; */
+    background: white;
+    /* border: 1px solid #ccc; */
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 4px 0;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Tooltip ocult */
+.desplegable-menu button::after,
+.desplegable-header::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: #333;
+    color: white;
+    font-size: 0.8rem;
+    white-space: nowrap;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1001;
+}
+/* Tooltip visible amb el ratolí */
+.desplegable-menu button:hover::after,
+.desplegable-header:hover::after {
+    opacity: 1;
+    visibility: visible;
 }

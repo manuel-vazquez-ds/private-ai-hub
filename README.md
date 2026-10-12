@@ -9,7 +9,7 @@ Private AI Hub is a local-first AI collaboration platform that enables interacti
 
 ## Current status
 
-🚧 Development phase, version 0.6.0
+🚧 Development phase, version 0.7.0
 
 ## MVP roadmap
 
@@ -22,3 +22,4 @@ Private AI Hub is a local-first AI collaboration platform that enables interacti
 - [x] Extractor from portable fomat document (pdf) files
 - [x] Multilingual interface
 - [x] Profile selector
+- [x] Download options for messages and conversations

@@ -4,5 +4,13 @@
     "sendButton": "Send",
     "defaultChatName": "Unnamed Chat",
     "mida": "File size exceeds the allowed limit",
-    "inclos": "Document already included"
+    "inclos": "Document already included",
+    "answer": "Answer",
+    "attachedFiles": "Attached files",
+    "userAsked": "User:\n--------------------------------\n\n",
+    "assistantAnswered": "Assistant:\n--------------------------------\n\n",
+    "conversation": "Conversation",
+    "descConvers": "Download entire conversation",
+    "txt": "Download as text",
+    "md": "Download as Markdown"
 }

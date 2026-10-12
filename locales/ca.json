@@ -4,5 +4,13 @@
     "sendButton": "Enviar",
     "defaultChatName": "Xat sense nom",
     "mida": "La mida d'arxius sobrepassa el permés",
-    "inclos": "Document ja inclòs"
+    "inclos": "Document ja inclòs",
+    "answer": "Resposta",
+    "attachedFiles": "Fitxers adjunts",
+    "userAsked": "Usuari:\n--------------------------------\n\n",
+    "assistantAnswered": "Assistent:\n--------------------------------\n\n",
+    "conversation": "Conversa",
+    "descConvers": "Descarregar la conversa completa",
+    "txt": "Descarregar com a text",
+    "md": "Descarregar com a Markdown"
 }

@@ -4,5 +4,13 @@
     "sendButton": "Enviar",
     "defaultChatName": "Chat sin nombre",
     "mida": "El tamaño del archivo excede el límite permitido",
-    "inclos": "Documento ya incluido"
+    "inclos": "Documento ya incluido",
+    "answer": "Respuesta",
+    "attachedFiles": "Archivos adjuntos",
+    "userAsked": "Usuario:\n--------------------------------\n\n",
+    "assistantAnswered": "Asistente:\n--------------------------------\n\n",
+    "conversation": "Conversación",
+    "descConvers": "Descargar la conversación completa",
+    "txt": "Descargar como texto",
+    "md": "Descargar como Markdown"
 }
