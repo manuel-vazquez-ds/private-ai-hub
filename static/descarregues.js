@@ -1,5 +1,6 @@
 // const formats = {txt: "Text", md: "Markdown"};
-const formats = {txt: {nom:"Text", fitxer: "des_TXT02_MVM.svg"}, md: {nom:"Markdown", fitxer: "des_MD02_MVM.svg"}};
+const formats = {txt: {nom:"Text", fitxer: "des_TXT02_MVM.svg"}, md: {nom:"Markdown", fitxer: "des_MD02_MVM.svg"},
+pdf: {nom:"PDF", fitxer: "des_PDF_MVM.svg"}};
 
 // function downloadFile(filename, content) {
 //     const blob = new Blob([content], { type: 'text/plain' });
@@ -27,7 +28,7 @@ export function crearOpcionsDescarrega(id_missatge, traduccions) {
                 
         const icona = document.createElement("img");
         icona.classList.add("descarregables");
-        icona.src = `/static/${dades.fitxer}`;
+        icona.src = `/static/icons/${dades.fitxer}`;
         // icona.alt = dades.nom;
         icona.alt = traduccions[format];
         nodeTipusFormat.appendChild(icona);

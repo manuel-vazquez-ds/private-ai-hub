@@ -36,13 +36,23 @@
                     </select>
                 </div> -->
                 <div id="blocbox">
+                    <div style="position: relative;">
+                    <!-- <div class = "desplegable-header disabled" idio-tool="newChat" data-tooltip="{{newChat}}"> -->
+                    <!-- <div class="btnSup disabled" id="nouXat">
+                        <button type="button" idio-tool="newChat" data-tooltip="{{newChat}}"> -->
+                    <div class="btnSup disabled" id="nouXat" idio-tool="newChat" data-tooltip="{{newChat}}">
+                        <button type="button" id="btnNouXat">
+                            <img class="descarregables" src="/static/icons/nouX_MVM.svg" alt="{{newChat}}">
+                        </button>
+                    </div>
+                    </div>
                     <div class="desplegable disabled" id="descarregar">
                         <!-- <button class="desplegable-toggle" type="button">
                             📥 Descargar
                         </button> -->
                         <!-- <div class = "desplegable-header disabled"> -->
                         <div class = "desplegable-header" idio-tool="descConvers" data-tooltip="{{descConvers}}">
-                            <img class="descarregables" src="/static/descarrega_MVM.svg" alt="{{descConvers}}">
+                            <img class="descarregables" src="/static/icons/descarrega_MVM.svg" alt="{{descConvers}}">
                             <!-- <img class="descarregables" src="/static/descarrega_MVM.svg" alt="Descargar"> -->
                             <!-- <span>📥 Descargar</span> -->
                         </div>
@@ -50,11 +60,15 @@
                         <div class="desplegable-menu">
                             <button type="button" data-format="txt" data-tooltip="{{txt}}">
                                 <!-- <img class="descarregables" src="/static/des_TXT02_MVM.svg" alt="Descargar en formato texto"> -->
-                                <img class="descarregables" src="/static/des_TXT02_MVM.svg" alt="{{txt}}">
+                                <img class="descarregables" src="/static/icons/des_TXT02_MVM.svg" alt="{{txt}}">
                             </button>
                             <button type="button" data-format="md" data-tooltip="{{md}}">
                                 <!-- <img class="descarregables" src="/static/des_MD02_MVM.svg" alt="Descargar en formato markdown"> -->
-                                <img class="descarregables" src="/static/des_MD02_MVM.svg" alt="{{md}}">
+                                <img class="descarregables" src="/static/icons/des_MD02_MVM.svg" alt="{{md}}">
+                            </button>
+                            <button type="button" data-format="pdf" data-tooltip="{{pdf}}">
+                                <!-- <img class="descarregables" src="/static/des_PDF02_MVM.svg" alt="Descargar en formato PDF"> -->
+                                <img class="descarregables" src="/static/icons/des_PDF_MVM.svg" alt="{{pdf}}">
                             </button>
                         </div>
                     </div>
@@ -116,7 +130,8 @@
             answer: "{{answer}}",
             descConvers: "{{descConvers}}",
             txt: "{{txt}}",
-            md: "{{md}}"
+            md: "{{md}}",
+            pdf: "{{pdf}}"
         };
     </script>
     <!-- llibreries externes -->

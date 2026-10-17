@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, sta
 # from fastapi.params import Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 
 from typing import List, Optional
 
@@ -20,6 +20,7 @@ import requests
 import sqlite3
 import uuid
 
+import io
 # ca: a partir d'aquí, importacions de les meves llibreries
 import context as ctx
 import fitx_gen as fg
@@ -165,6 +166,8 @@ async def privateAIH_root(request: Request):
         "descConvers": translations.get("descConvers", "Download entire conversation"),
         "txt": translations.get("txt", "Download as text"),
         "md": translations.get("md", "Download as Markdown"),
+        "pdf": translations.get("pdf", "Download as PDF"),
+        "newChat": translations.get("newChat", "New chat"),
         # afegim una versió per forçar la recàrrega dels fitxers estàtics
         "version": int(time.time()),
         "current_language": current_language,
@@ -492,8 +495,16 @@ async def descarregar_missatge(id_missatge: int, format: str):
 
     components = fg.fitxerDeResposta(missatge_t)
 
-    return Response(
-        content=components["dades"],
+    # ca: per fer PDF canviem components["dades"]]
+    les_dades = components["dades"]
+    if isinstance(les_dades, str):
+        les_dades = les_dades.encode('utf-8')
+
+    # return Response(
+    #     content=components["dades"],
+
+    return StreamingResponse(
+        content=io.BytesIO(les_dades),
         media_type=components["mediaType"],
         headers={
             "Content-Disposition":

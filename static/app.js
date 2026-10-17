@@ -16,9 +16,10 @@ const botonEnviar = document.getElementById("enviar");
 const idiomaSelect = document.getElementById("idioma");
 const perfilSelect = document.getElementById("perfil");
 const botons = document.getElementById("botons");
+const btnNouXat = document.getElementById("btnNouXat");
 let currentConversationId = null;
 let enviant = false;
-// let traduccions = {};
+let traduccions = {};
 
 const desplegable = document.getElementById("descarregar");
 // const toggle = desplegable.querySelector(".desplegable-toggle");
@@ -30,23 +31,34 @@ const desplegable = document.getElementById("descarregar");
 // });
 
 function actualitzaEstatDescarrega() {
-    const dropdown = document.getElementById("descarregar");
+  const dropdown = document.getElementById("descarregar");
 
-    dropdown.classList.toggle("disabled", !Number.isInteger(currentConversationId));
+  dropdown.classList.toggle("disabled", !Number.isInteger(currentConversationId));
+  const nouXat = document.getElementById("nouXat")
+  nouXat.classList.toggle("disabled", !Number.isInteger(currentConversationId));
 }
 
 desplegable.querySelectorAll("[data-format]").forEach(opcion => {
-    opcion.addEventListener("click", () => {
-        const format = opcion.dataset.format;
+  opcion.addEventListener("click", () => {
+    const format = opcion.dataset.format;
 
-        // descargar conversación
-        window.location.href = `/conversacio/${currentConversationId}/descarregar?format=${format}`;
-        // console.log(format);
+    // descargar conversación
+    window.location.href = `/conversacio/${currentConversationId}/descarregar?format=${format}`;
+    // console.log(format);
 
-        // desplegable.classList.remove("open");
-    });
+    // desplegable.classList.remove("open");
+  });
 });
 
+btnNouXat.addEventListener('click', () => {
+  if (btnNouXat.parentElement.classList.contains('disabled')) {
+    // console.log('Nou xat: botó deshabilitat');
+    return;
+  }
+
+  // console.log('Nou xat: botó habilitat, executar acció');
+  reiniciaXat();
+});
 // desplegable.hidden = !currentConversationId;
 
 // ca: a l'haver passat a mòdul app.js, ara, les variables no es veuen fora.
@@ -57,7 +69,7 @@ mensaje.addEventListener('input', () => {
   botonEnviar.disabled = mensaje.value.trim() === '';
 });
 // function afegirMissatge(text, tipus) {
-function afegirMissatge(text, tipus, id_missatge=null) {
+function afegirMissatge(text, tipus, id_missatge = null) {
   // console.log("Afegir missatge");
   // console.log("afegirMissatge", id_missatge);
   const node = document.createElement("div");
@@ -66,7 +78,7 @@ function afegirMissatge(text, tipus, id_missatge=null) {
     // ca: TODO ESTIC AQUÍ HEM D'ESBORRAR EL textcontent i fer append()
     //node.textContent = text;
     node.append(text.text);
-    if (text.arxius.length >0) {
+    if (text.arxius.length > 0) {
       const arxiusE = document.createElement("div");
       arxiusE.classList.add("arxiusE");
       node.append(arxiusE);
@@ -75,7 +87,7 @@ function afegirMissatge(text, tipus, id_missatge=null) {
         const nodo = document.createElement("div");
         nodo.classList.add("cada_arx");
         nodo.style.borderColor = "black";
-        nodo.innerHTML=el_arxiu;
+        nodo.innerHTML = el_arxiu;
         arxiusE.append(nodo);
       });
 
@@ -104,7 +116,7 @@ function afegirMsgPrompt(text) {
   return afegirMissatge(text, "msgprompt");
 }
 // function afegirMsgResponse(text) {
-function afegirMsgResponse({text, id_missatge=null}) {
+function afegirMsgResponse({ text, id_missatge = null }) {
   // console.log("afegirMsgResponse", id_missatge);
   return afegirMissatge(text, "msgresponse", id_missatge);
 }
@@ -182,6 +194,7 @@ bloqueFormulario.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (enviant) return;
   enviant = true;
+  window.enviant = true;
   // ca: per treure el focus del textarea quan s'envia el formulari
   document.activeElement.blur();
   canvia_form_estat();
@@ -195,7 +208,7 @@ bloqueFormulario.addEventListener('submit', async (e) => {
   llista_arxius.forEach(arxiu => {
     arxiusE.push(arxiu.file.name);
   });
-  afegirMsgPrompt({text: mensaje.value.trim(), arxius: arxiusE});
+  afegirMsgPrompt({ text: mensaje.value.trim(), arxius: arxiusE });
 
 
   const estat = crearMsgStatus();
@@ -211,9 +224,9 @@ bloqueFormulario.addEventListener('submit', async (e) => {
     });
     // ca: provem això sinò farem un JSON stringify
     formData.append("message", mensaje.value.trim());
-    if (currentConversationId) 
+    if (currentConversationId)
       formData.append("conversacio_id", currentConversationId);
-    
+
     formData.append("perfil_id", perfilSelect.value);
     const resposta = await fetch("/chat", {
       method: "POST",
@@ -230,7 +243,7 @@ bloqueFormulario.addEventListener('submit', async (e) => {
     currentConversationId = data.conversacio_id;
     const currentMissatge_id = data.missatge_id;
     //afegirMsgResponse( data.response);
-    afegirMsgResponse({text: data.response, id_missatge: currentMissatge_id});
+    afegirMsgResponse({ text: data.response, id_missatge: currentMissatge_id });
     // afegirMsgResponse(text= data.response, id_missatge = currentMissatge_id);
     finalitzarMsgStatus(estat);
     perfilSelect.disabled = true;
@@ -241,7 +254,7 @@ bloqueFormulario.addEventListener('submit', async (e) => {
     // ca: trec el desplegable perque ara estarà visible i dehabilitada la capcelerea
     // desplegable.style.display = "inline-block";
 
-    
+
   } catch (error) {
     console.error(error);
     // estat.node.classList.add("msgstatusfinal");
@@ -257,10 +270,11 @@ bloqueFormulario.addEventListener('submit', async (e) => {
     botonEnviar.disabled = true;
     botons.disabled = false;
     enviant = false;
+    window.enviant = false;
     canvia_form_estat();
-    
+
     actualitzaEstatDescarrega();
-    
+
     mensaje.focus();
   }
 });
@@ -349,3 +363,51 @@ mensaje.addEventListener("keydown", (e) => {
     bloqueFormulario.requestSubmit();
   }
 });
+function reiniciaXat() {
+
+  const bloqueCentral = document.getElementById("bloque-central");
+
+  // ca: Esborra de golpe tot el contingut (missatges afegits)
+  bloqueCentral.innerHTML = "";
+
+  // ca: Torna a crear el missatge inicial
+  const mensajeInicial = document.createElement("div");
+  mensajeInicial.id = "mensaje-inicial";
+  mensajeInicial.style.fontStyle = "italic";
+  mensajeInicial.textContent = "...waiting a message / esperando un mensaje / esperant un missatge";
+
+  bloqueCentral.appendChild(mensajeInicial);
+
+  // ca: reiniciar el perfil select
+  // perfilSelect.value = "";
+  // ca: canviar el perfil a la primera opció del select
+  perfilSelect.selectedIndex = 0;
+  perfilSelect.disabled = false;
+  
+  // ca: reiniciar el botó d'enviar
+  botonEnviar.disabled = true;
+  
+  // ca: reiniciar el textarea
+  mensaje.value = "";
+  mensaje.style.height = "auto";
+  
+  // ca: reiniciar la variable de control
+  neteja_arxius();
+  botonEnviar.disabled = true;
+  botons.disabled = false;
+
+  enviant = false;
+  window.enviant = false;
+
+  // ca: reiniciar l'ID de la conversa
+  currentConversationId = null;
+  
+  // ca: actualitzar l'estat del formulari
+  canvia_form_estat();
+  
+  // ca: actualitzar l'estat de la descàrrega
+  actualitzaEstatDescarrega();
+  
+  // ca: enfocar el textarea
+  mensaje.focus();
+}

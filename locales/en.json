@@ -12,5 +12,7 @@
     "conversation": "Conversation",
     "descConvers": "Download entire conversation",
     "txt": "Download as text",
-    "md": "Download as Markdown"
+    "md": "Download as Markdown",
+    "pdf": "Download as PDF",
+    "newChat": "New Chat"
 }

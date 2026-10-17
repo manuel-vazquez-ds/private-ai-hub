@@ -12,5 +12,7 @@
     "conversation": "Conversa",
     "descConvers": "Descarregar la conversa completa",
     "txt": "Descarregar com a text",
-    "md": "Descarregar com a Markdown"
+    "md": "Descarregar com a Markdown",
+    "pdf": "Descarregar com a PDF",
+    "newChat": "Nou Xat"
 }
