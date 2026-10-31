@@ -1,3 +1,4 @@
+from calendar import c
 from pathlib import Path
 # from fastapi import FastAPI, Request
 from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, status
@@ -19,6 +20,7 @@ import requests
 # ca: per fer la base de dades, i per fer identificadors únics
 import sqlite3
 import uuid
+import secrets
 
 import io
 # ca: a partir d'aquí, importacions de les meves llibreries
@@ -60,6 +62,17 @@ try:
             nom TEXT NOT NULL,
             nom_a_mostrar TEXT NOT NULL,
             parametres TEXT)"""
+        # tbl_conversations = """CREATE TABLE IF NOT EXISTS conversations (
+        #     id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
+        #     session_id TEXT NOT NULL,
+        #     model_id INTEGER NOT NULL, nom TEXT DEFAULT 'default chat', 
+        #     stream TEXT DEFAULT 'false', think TEXT DEFAULT 'true',
+        #     options TEXT DEFAULT '{}',
+        #     data_creacio TEXT DEFAULT CURRENT_TIMESTAMP,
+        #     data_modificacio TEXT DEFAULT CURRENT_TIMESTAMP,
+        #     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+        #     FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE)
+        #     """
         tbl_conversations = """CREATE TABLE IF NOT EXISTS conversations (
             id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
             session_id TEXT NOT NULL,
@@ -68,13 +81,23 @@ try:
             options TEXT DEFAULT '{}',
             data_creacio TEXT DEFAULT CURRENT_TIMESTAMP,
             data_modificacio TEXT DEFAULT CURRENT_TIMESTAMP,
+            referencia TEXT UNIQUE NOT NULL,
+            perfil_id INTEGER NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-            FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE)
+            FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE,
+            FOREIGN KEY (perfil_id) REFERENCES perfil (id) ON DELETE CASCADE)
             """
         # ca: Nou perfil apuntem a un model per defecte
+        # tbl_perfil = """CREATE TABLE IF NOT EXISTS perfil (
+        #     id INTEGER PRIMARY KEY AUTOINCREMENT, nom_rol UNIQUE ON CONFLICT IGNORE,
+        #     model_id INTEGER NOT NULL, content NOT NULL, parametres TEXT DEFAULT '{}',
+        #     think TEXT DEFAULT 'true',
+        #     FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE SET DEFAULT)
+        #     """
         tbl_perfil = """CREATE TABLE IF NOT EXISTS perfil (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, nom_rol UNIQUE ON CONFLICT IGNORE,
-            model_id INTEGER NOT NULL, content NOT NULL, parametres TEXT DEFAULT '{}',
+            id INTEGER PRIMARY KEY AUTOINCREMENT, nom_rol TEXT UNIQUE ON CONFLICT IGNORE,
+            nom_key TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
+            model_id INTEGER NOT NULL, content TEXT NOT NULL, parametres TEXT DEFAULT '{}',
             think TEXT DEFAULT 'true',
             FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE SET DEFAULT)
             """
@@ -99,19 +122,31 @@ try:
                           ("qwen3.6:latest", "Qwen 3.6", '{"temperature":0.5,"num_ctx":262144, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}'),
                           ("qwen3.5:4b", "Qwen 3.5 4B", '{"temperature":1.1,"num_ctx":131072, "top_k":30,"top_p":0.75,"repeat_penalty":1.1}'),
                           ("qwen3.8:27b", "Qwen 3.8", '{"temperature":0.5,"num_ctx":262144, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}')]
-        perfil_data_ini = [["Analyst / Analista", 1,
+        # perfil_data_ini = [["Analyst / Analista", 1,
+        #                 "Mi rol principal eres un analista estadístico.", '{}',"true"],
+        #                 ["Generalist expert / Experto generalista / Expert generalista", 2,
+        #                 "Soy un experto en cualquier área, que además de dar la respuesta más adecuada según el tipo de pregunta, también puede ofrecer consejos y recomendaciones.", '{}',"true"],
+        #                 ["Fast Responder / Respondedor Rápido / Responedor Ràpid", 3,
+        #                 "Person who answers instantly, assuming knowledge without deep thinking; speed over accuracy. No thinking.", '{}',"false"],
+        #                 ["Cultured Thinker / Pensador Culto / Pensador Culte", 1,
+        #                 "Mi rol principal es de una persona con conocimiento amplio, buen razonamiento y cultura sólida; inteligente sin ser erudito, si puedes responde con estos términos.",
+        #                  '{"temperature":0.5, "top_k":40, "repeat_penalty":1.1}', "true"],
+        #                 ["The wise friend / El amigo sabio / L\'amic savi", 4,
+        #                 "Soy una persona con amplio conocimiento, al que acudir para saber algo de lo que sea, Sugiero las siguientes preguntas a formular.", '{}',"true"]]
+        perfil_data_ini = [["Analyst / Analista", "analyst", 1,
                         "Mi rol principal eres un analista estadístico.", '{}',"true"],
-                        ["Generalist expert / Experto generalista / Expert generalista", 2,
+                        ["Generalist expert / Experto generalista / Expert generalista", "generalist", 2,
                         "Soy un experto en cualquier área, que además de dar la respuesta más adecuada según el tipo de pregunta, también puede ofrecer consejos y recomendaciones.", '{}',"true"],
-                        ["Fast Responder / Respondedor Rápido / Responedor Ràpid", 3,
+                        ["Fast Responder / Respondedor rápido / Responedor ràpid", "fast", 3,
                         "Person who answers instantly, assuming knowledge without deep thinking; speed over accuracy. No thinking.", '{}',"false"],
-                        ["Cultured Thinker / Pensador Culto / Pensador Culte", 1,
+                        ["Cultured Thinker / Pensador culto / Pensador culte", "cultured", 1,
                         "Mi rol principal es de una persona con conocimiento amplio, buen razonamiento y cultura sólida; inteligente sin ser erudito, si puedes responde con estos términos.",
                          '{"temperature":0.5, "top_k":40, "repeat_penalty":1.1}', "true"],
-                        ["The wise friend / El amigo sabio / L\'amic savi", 4,
+                        ["The wise friend / El amigo sabio / L\'amic savi", "friend", 4,
                         "Soy una persona con amplio conocimiento, al que acudir para saber algo de lo que sea, Sugiero las siguientes preguntas a formular.", '{}',"true"]]
         for x in range(len(perfil_data_ini)):
-            perfil_data_ini[x][2] += ctx.INFORMACIO_ADDICIONAL
+            # perfil_data_ini[x][2] += ctx.INFORMACIO_ADDICIONAL
+            perfil_data_ini[x][3] += ctx.INFORMACIO_ADDICIONAL
 
         cursor.execute(tbl_users)
         cursor.execute(tbl_models)
@@ -128,9 +163,12 @@ try:
             cursor.executemany("INSERT INTO models (nom, nom_a_mostrar, parametres) VALUES (?,?,?)", models_data_ini)
         if cursor.execute("SELECT 1 FROM perfil LIMIT 1").fetchone() is None:
             # cursor.execute("INSERT INTO perfil (nom_rol, content) VALUES (?,?)", (perfil_data_ini))
-            cursor.executemany("INSERT INTO perfil (nom_rol, model_id, content, parametres, think) VALUES (?,?,?,?,?)", (perfil_data_ini))
+            # cursor.executemany("INSERT INTO perfil (nom_rol, model_id, content, parametres, think) VALUES (?,?,?,?,?)", (perfil_data_ini))
+            cursor.executemany("INSERT INTO perfil (nom_rol, nom_key, model_id, content, parametres, think) VALUES (?,?,?,?,?,?)", (perfil_data_ini))
 except Exception as e:
     print(f"Error loading database / error leyendo la base de detos / error llegint la base de dades: {e}")
+    import traceback
+    traceback.print_exc()
 
 # ca: URL del proveïdor per defecte, en principi Ollama
 llmProvider = "http://localhost:11434/api/chat"
@@ -168,10 +206,21 @@ async def privateAIH_root(request: Request):
         "md": translations.get("md", "Download as Markdown"),
         "pdf": translations.get("pdf", "Download as PDF"),
         "newChat": translations.get("newChat", "New chat"),
+        "waiting": translations.get("waiting", "... waiting for a message"),
+        "carregaXat": translations.get("carregaXat", "Continue a previous conversation"),
+        "carregaConversa": translations.get("carregaConversa", "Introduce the conversation reference"),
+        "errorConversa": translations.get("errorConversa", "Error loading the conversation"),
+        "noConversa": translations.get("noConversa", "Conversation not found"),
+        "errorDesc": translations.get("errorDesc", "Unknown error"),
+        "btnCarregaConversa": translations.get("btnCarregaConversa", "Load"),
+        "cancelar": translations.get("cancelar", "Cancel"),
         # afegim una versió per forçar la recàrrega dels fitxers estàtics
         "version": int(time.time()),
         "current_language": current_language,
-        "perfils": await recuperaPerfils()
+        "thinking": translations.get("thinking", "Thinking..."),
+        "received": translations.get("received", "Response received in"),
+        # "perfils": await recuperaPerfils()
+        "perfils": await recuperaPerfils(translations)
     }
     # return templates.TemplateResponse("index.html", {"request": request})
     # return templates.TemplateResponse("index.html", {"request": {}})
@@ -218,7 +267,7 @@ async def chat(request: Request,
 
     # ca: comprovem el context dels arxius
     if arxius:
-        print(f"Arxius: {[x.filename for x in arxius]}")
+        # print(f"Arxius: {[x.filename for x in arxius]}")
         problema = ctx.comprovar_arxius(arxius)
         # print(f"Problema: {problema}")
         try:
@@ -259,7 +308,7 @@ async def chat(request: Request,
         missatges.append(pregunta["message"].copy())
         if arxius:
             missatges[-1]["content"], arxius_content =  await ctx.processar_arxius(missatges[-1]["content"], arxius)
-            print(missatges[-1]["content"])
+            # print(missatges[-1]["content"])
         else:
             arxius_content = None
 
@@ -277,7 +326,8 @@ async def chat(request: Request,
                 # conversacio["messages"] = json.dumps(missatges)
                 # conversacio["metadades"] = json.dumps(metadades)
                 # await guarda_conversacio(conversacio, pregunta, resposta, missatge_system, arxius_content)
-                conversacio_id, missatge_id = await guarda_conversacio(conversacio, pregunta, resposta, missatge_system, arxius_content)
+                # conversacio_id, missatge_id = await guarda_conversacio(conversacio, pregunta, resposta, missatge_system, arxius_content)
+                conversacio_id, missatge_id = await guarda_conversacio(conversacio, pregunta, resposta, missatge_system, perfil_id, arxius_content )
                 
             else:
                 # resposta = "Error en la crida al LLM"
@@ -312,6 +362,8 @@ async def  get_user(session_id: str):
 
 # LA SEGÜENT ES LA DE LOCALITZAR CONVERSACIONS
 async def localitza_una(session_id:str, user_id: int, conversacio_id: int, perfil_id: int, model_id: int):
+    # potser ho hem de canviar perquè no faci servir translations
+    # global translations
     with prAIHdb:
         cursor = prAIHdb.cursor()
         if conversacio_id:
@@ -319,7 +371,9 @@ async def localitza_una(session_id:str, user_id: int, conversacio_id: int, perfi
                 # ca: es recupera un camp menys perquè no pot haver data de modificació
                 # conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND session_id = ?", (conversacio_id, session_id)).fetchone()[:10]
                 # ara ni missatges ni metadades
-                conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND session_id = ?", (conversacio_id, session_id)).fetchone()[:8]
+                # conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND session_id = ?", (conversacio_id, session_id)).fetchone()[:8]
+                # ca: El canviem perquè al carregar per referència, session_id no serà el mateix
+                conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ?", (conversacio_id,)).fetchone()[:8]
             else:
                 # conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND user_id = ?", (conversacio_id, user_id)).fetchone()[:9]
                 conversacions = cursor.execute("SELECT * FROM conversations WHERE id = ? AND user_id = ?", (conversacio_id, user_id)).fetchone()[:7]
@@ -391,11 +445,13 @@ async def envia_missatge(model_nom, stream, opcions, missatges, elThink)-> reque
     #     }, f, ensure_ascii=False)
     #
     ###
+    # print({"model": model_nom, "messages": missatges, "stream": stream, "think": elThink, "options": opcions})
     return requests.post(llmProvider, json={"model": model_nom, "messages": missatges, "stream": stream, "think": elThink, "options": opcions}, verify=False)
 
 # async def guarda_conversacio(conversacio: dict):
 # async def guarda_conversacio(conversacio: dict, pregunta: dict, resposta: dict, missatge_system: dict):
-async def guarda_conversacio(conversacio: dict, pregunta: dict, resposta: dict, missatge_system: dict, arxius_content: list=None):
+# async def guarda_conversacio(conversacio: dict, pregunta: dict, resposta: dict, missatge_system: dict, arxius_content: list=None):
+async def guarda_conversacio(conversacio: dict, pregunta: dict, resposta: dict, missatge_system: dict, el_perfil: int, arxius_content: list=None):
     # ca: Aquí guardem la conversació
     data_ara = datetime.datetime.now().replace(microsecond=0).isoformat()
     # ca: Hem creat un current_datetime, perquè el del SQLITE es fa en UTC
@@ -409,9 +465,30 @@ async def guarda_conversacio(conversacio: dict, pregunta: dict, resposta: dict, 
         #     (conversacio["user_id"], conversacio["session_id"], conversacio["model_id"], conversacio["nom"], 
         #     conversacio["stream"], conversacio["think"], conversacio["options"], conversacio["messages"], conversacio["metadades"], data_ara, data_ara)).lastrowid
         if not conversacio["id"]:
-            conversacio["id"] = cursor.execute("INSERT INTO conversations (user_id, session_id, model_id, nom, stream, think, options, data_creacio, data_modificacio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (conversacio["user_id"], conversacio["session_id"], conversacio["model_id"], conversacio["nom"], 
-            conversacio["stream"], conversacio["think"], conversacio["options"], data_ara, data_ara)).lastrowid
+            # conversacio["id"] = cursor.execute("INSERT INTO conversations (user_id, session_id, model_id, nom, stream, think, options, data_creacio, data_modificacio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            # (conversacio["user_id"], conversacio["session_id"], conversacio["model_id"], conversacio["nom"], 
+            # conversacio["stream"], conversacio["think"], conversacio["options"], data_ara, data_ara)).lastrowid
+            
+            # ca: intentarem afegir la conversa 100 cops si l'error prové de referència duplicada
+            # ca: generarem un titol per la conversa per no utilitzar conversacio["nom"]
+            titol = await genera_titol(conversacio["model_id"], pregunta["message"]["content"], resposta["message"]["content"])
+            MAX_COPS = 100
+            for _ in range(MAX_COPS):
+                codi = genera_codi()
+                try:
+                    conversacio["id"] = cursor.execute("INSERT INTO conversations (user_id, session_id, model_id, nom, stream, think, options, data_creacio, data_modificacio, perfil_id, referencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (conversacio["user_id"], conversacio["session_id"], conversacio["model_id"], titol, 
+                    conversacio["stream"], conversacio["think"], conversacio["options"], data_ara, data_ara, el_perfil, codi)).lastrowid
+                except sqlite3.IntegrityError as e:
+                    if "referencia" not in str(e):
+                        raise
+                    continue
+                break
+            # aquí posem un else: que sols s'executa si esgota tot el bucle for:
+            else:
+                raise Exception("No s'ha pogut generar un codi de referència únic per la conversa")
+            # si arribem aquí, hem creat la conversa
+
             afegir_missatge(conversacio["id"], missatge_system, data_ara)
         
         # afegir_missatge(conversacio["id"], pregunta, data_ara)
@@ -429,10 +506,20 @@ async def modelFromPerfil(perfil_id: int):
         model_id = cursor.execute("SELECT model_id FROM perfil WHERE id = ?", (perfil_id,)).fetchone()[0]
         return model_id
 
-async def recuperaPerfils():
+# async def recuperaPerfils():
+#     with prAIHdb:
+#         cursor = prAIHdb.cursor()
+#         perfils = cursor.execute("SELECT id, nom_rol FROM perfil").fetchall()
+#         return perfils
+async def recuperaPerfils(traduccions: dict):
     with prAIHdb:
         cursor = prAIHdb.cursor()
-        perfils = cursor.execute("SELECT id, nom_rol FROM perfil").fetchall()
+        perfils = cursor.execute("SELECT id, nom_rol, nom_key FROM perfil").fetchall()
+        # ca: he de convertir la sortida dels registres de sqlite de tuples a llistes per poder-los manipular.
+        perfils= [list(perfil) for perfil in perfils]
+        for perfil in perfils:
+            perfil[1]=traduccions.get(perfil[2], perfil[1])
+            perfil.append(perfil[2])
         return perfils
 
 async def recupera_missatges(la_conversacio:int):
@@ -517,19 +604,42 @@ async def recupera_conversacio(id_conversacio:int, format: str):
     global translations
     with prAIHdb:
         cursor = prAIHdb.cursor()
-        conversacio_t = cursor.execute("SELECT data_modificacio FROM conversations WHERE id = ? LIMIT 1", (id_conversacio,)).fetchone()
+        # conversacio_t = cursor.execute("SELECT data_modificacio FROM conversations WHERE id = ? LIMIT 1", (id_conversacio,)).fetchone()
+        # ca: com que hem afegit referencia i perfil_id, que els necessitem, canviem la consulta
+        conversacio_t = cursor.execute("SELECT data_modificacio, nom, referencia, perfil_id FROM conversations WHERE id = ? LIMIT 1", (id_conversacio,)).fetchone()
     if conversacio_t is None:
         raise HTTPException(
             status_code=404,
-            detail="Conversation not found / Conversación no encontrada / Conversació no trobada"
+            detail=translations.get("noConversa", "Conversation not found")
         )
+
+    titol = conversacio_t[1]
+    referencia = conversacio_t[2]
+    perfil = conversacio_t[3]
+    
     conversacio_t = conversacio_t[0]
+
+    # print ("conversacio_t:", conversacio_t)
+
+    # ca: Recuperem la definició del perfil
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        perfil_t = cursor.execute("SELECT nom_key, nom_rol FROM perfil WHERE id = ? LIMIT 1", (perfil,)).fetchone()
+        nom_perfil = translations.get(perfil_t[0], perfil_t[1])
 
     with prAIHdb:
         cursor = prAIHdb.cursor()
         # ca: Excluim el missatge del sistema
         missatges= cursor.execute("SELECT role, content, id FROM messages WHERE conversacio_id = ? ORDER BY id", (id_conversacio,)).fetchall()[1:]
         cadenaConversacio = ""
+
+        # ca: amb la nova capcelera ara serà....
+        titolText = translations.get("titol", "Title: ")
+        referenciaText = translations.get("referencia", "Reference: ")
+        perfilText = translations.get("perfil", "Profile: ")
+        cadenaConversacio += f"## {titolText} {titol}\n\n**{referenciaText}** {referencia}  \n**{perfilText}** {nom_perfil}  \n"
+        cadenaConversacio += "\n-------------------------------------------\n\n"
+
         claus= ("role","content")
         # for missatge in missatges:
         #     llista_missatges.append(dict(zip(claus,missatge)))
@@ -557,6 +667,105 @@ async def recupera_conversacio(id_conversacio:int, format: str):
                 f'attachment; filename="{components["nomFitx"]}"'
         }
     )
+# ca: generador de codis fàcil d'escriure, mida 8 caracters
+def genera_codi(mida = 8):
+    ALFA_SEGUR = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+    return ''.join(secrets.choice(ALFA_SEGUR) for _ in range(mida))
+
+async def genera_titol(model_id, pregunta, resposta):
+    # print(f"Model: {model_id}, Pregunta: {pregunta}, Resposta: {resposta}")
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        # em sembla que fer amb una "," el fa més net el escollir el primer valor de la llista
+        model, = cursor.execute("SELECT nom FROM models WHERE id = ?", (model_id,)).fetchone()
+    
+    
+    # print(f"Model: {model}")
+    # content ="Make a short title for this conversation below. Try to answer in the same language as the user and assistant do it. If can't, answer in English.\n\n"
+    content = """Generate a short, descriptive title for the conversation below.
+
+**Instructions:**
+- Summarise the main topic or intent of the conversation.
+- Use the same language as the user's messages. If the language cannot be determined, use English.
+- Keep the title concise, ideally between 3 and 8 words.
+- Return only the title, without quotation marks, explanations, prefixes, or Markdown formatting.
+- Do not answer the user's questions or continue the conversation.
+
+    """
+    content += "**Conversation:**\n"
+    content += f"(User):\n{pregunta}\n"
+    content += f"(Assistant):\n{resposta}\n"
+        # TODO: implementar la generació del títol
+    # print(f"Content: {content}")
+    parametres ={"temperature":0.5,"num_ctx":262144, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}
+    elStream = False
+    elThink =  False
+    # missatge = {"message":{"role":"user","content":content}}
+    missatge = {"role":"user","content":content}
+    # print({"model": model, "messages": [missatge], "stream": elStream, "think": elThink, "options": parametres})
+    resposta = requests.post(llmProvider, json={"model": model, "messages": [missatge], "stream": elStream, "think": elThink, "options": parametres}, verify=False)
+    # print(f"Resposta: {resposta.text}")
+    # el titol estarà en resposta["message"]["content"]
+    # return "Títol generat"
+    # ca: retornem 100 caracters com a màxim
+    return resposta.json()["message"]["content"][:100]
+
+@privateAIH.post("/carregaConv", response_class=JSONResponse)
+async def carregaConv(request: Request):
+    global translations
+    # ca: llegim el body de la petició
+    body = await request.json()
+    # print(f"\n\n\nBody: {body}\n\n\n")
+    try:
+        laConversa =  await carregaConversa(body["ref"])
+    except Exception as e:
+        # print(f"Error carregant conversa: {e}")
+        raise HTTPException(status_code=500, detail=translations.get("errorDesc","Unknown error"))
+
+    if laConversa:
+        # això potser s'ha d'ampliar
+        # print(f"Conversa: {laConversa}")
+        
+        # return laConversa
+        # return JSONResponse(content=laConversa)
+        return JSONResponse(laConversa)
+    else:
+        raise HTTPException(status_code=404, detail=translations.get("noConversa", "Conversation not found"))
+
+async def carregaConversa(ref: str):
+    # try:
+    #     # TODO: implementar la càrrega de la conversa
+    #     pass
+    # except Exception as e:
+    #     print(f"Error carregant conversa: {e}")
+    #     return {"error": str(e)}
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        conversacio_ref = cursor.execute("SELECT id, perfil_id FROM conversations WHERE referencia = ? LIMIT 1", (ref,)).fetchone()
+    
+    if conversacio_ref is None:
+        # ca: Si no la troba
+        return None
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        # ca: La primera no, que es la del sistema
+        missatges_ref= cursor.execute("SELECT role, content, id FROM messages WHERE conversacio_id = ? ORDER BY id", (conversacio_ref[0],)).fetchall()[1:]
+
+    # ca: recollim el nom dels arxius
+    with prAIHdb:
+        cursor = prAIHdb.cursor()
+        # for missatge in missatges_ref:
+        #     arxius_ref= cursor.execute("SELECT name FROM arxius WHERE missatge_id = ?", (missatge[2],)).fetchall()
+        #     missatge.append(arxius_ref)
+        for num, missatge in enumerate(missatges_ref):
+            arxius_ref= cursor.execute("SELECT name FROM arxius WHERE missatge_id = ?", (missatge[2],)).fetchall()
+            arxius_ref = [arxiu[0] for arxiu in arxius_ref]
+            missatges_ref[num] = missatge + (arxius_ref,)
+
+    conversacio_ref=dict(zip(("conversacio_id", "perfil_id"), conversacio_ref))
+    missatges_ref= [dict(zip(("role", "contingut", "missatge_id", "arxius"), missatge)) for missatge in missatges_ref]
+
+    return {"conversacio": conversacio_ref, "missatges": missatges_ref}
 
 # arranquem la API
 if __name__ == "__main__":

@@ -72,6 +72,7 @@ body, html {
 }
 #botons{ display: flex;
     flex-direction: column;
+    gap: 5px;
 }
 .bloc_espera{
     opacity: 0.6;
@@ -95,7 +96,7 @@ body, html {
     font-size: 16px;
     /* display: inline-flexbox; */
  }
-#enviar { padding: 10px 20px;
+#enviar, #btnCarregaConversa { padding: 10px 20px;
     background-color: #2196F3;
     color: #fff;
     border: none;
@@ -103,9 +104,18 @@ body, html {
     cursor: pointer;
     font-family: Arial,sans-serif;
     height: 40px;
-    font-weight: bold; }
-#enviar:hover { background-color: #2159f3; }
-#enviar:disabled { background-color: #ccc; cursor: not-allowed; }
+    font-size: 16px;
+    font-weight: bold;
+}
+#enviar:hover, #btnCarregaConversa:hover {
+    /* background-color: #2159f3; */
+    filter: brightness(0.85);
+}
+#enviar:disabled, #btnCarregaConversa:disabled { 
+    /* background-color: #ccc;  */
+    filter: brightness(1.3);
+    cursor: not-allowed; 
+}
 #el-flexo{
   display:flex;
   justify-content: space-between;
@@ -117,6 +127,9 @@ select {
     border-radius: 6px;
     font-size: 1em;
     cursor: pointer;
+}
+select:disabled {
+    cursor: not-allowed;
 }
 option {
   color: #304FFE;
@@ -257,7 +270,7 @@ option {
 } */
 
 .desplegable.disabled .desplegable-header ,
-.btnSup.disabled{
+.btnSup.disabled, #idibox.disabled {
     opacity: 0.4;
 }
 
@@ -360,3 +373,47 @@ option {
     opacity: 1;
     visibility: visible;
 }
+#popupCarregaConversa {
+    border: 1px solid #2196F3;
+    border-radius: 4px;
+}
+#formConversa {
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+    /* border: 1px solid #2196F3;
+    border-radius: 4px; */
+    font-family: Arial,sans-serif;
+    font-size: 16px;
+    padding: 10px;
+}
+#botonsConversa {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+}
+#cancelarCarrega {
+    padding: 10px 20px;
+    /* background-color: #2196F3; */
+    /* color: #fff; */
+    /* color: #333; */
+    color: black;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Arial,sans-serif;
+    height: 40px;
+    font-size: 16px;
+    /* font-weight: bold; */
+}
+#cancelarCarrega:hover {
+    filter:brightness(0.85)
+ }
+ #refConversa {
+    border: 1px solid #2196F3;
+    border-radius: 4px;
+    padding: 6px;
+    font-family: Arial,sans-serif;
+    font-size: 16px;
+ }

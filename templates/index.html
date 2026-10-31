@@ -37,21 +37,31 @@
                 </div> -->
                 <div id="blocbox">
                     <div style="position: relative;">
-                    <!-- <div class = "desplegable-header disabled" idio-tool="newChat" data-tooltip="{{newChat}}"> -->
-                    <!-- <div class="btnSup disabled" id="nouXat">
+                        <!-- <div class = "desplegable-header disabled" idio-tool="newChat" data-tooltip="{{newChat}}"> -->
+                        <!-- <div class="btnSup disabled" id="nouXat">
                         <button type="button" idio-tool="newChat" data-tooltip="{{newChat}}"> -->
-                    <div class="btnSup disabled" id="nouXat" idio-tool="newChat" data-tooltip="{{newChat}}">
-                        <button type="button" id="btnNouXat">
-                            <img class="descarregables" src="/static/icons/nouX_MVM.svg" alt="{{newChat}}">
-                        </button>
+                        <div class="btnSup " id="carregaXat" idio-tool="carregaXat" data-tooltip="{{carregaXat}}">
+                            <button type="button" id="btnCarregaXat">
+                                <img class="descarregables" src="/static/icons/carregaCo01_MVM.svg" alt="{{carregaXat}}">
+                            </button>
+                        </div>
                     </div>
+                    <div style="position: relative;">
+                        <!-- <div class = "desplegable-header disabled" idio-tool="newChat" data-tooltip="{{newChat}}"> -->
+                        <!-- <div class="btnSup disabled" id="nouXat">
+                        <button type="button" idio-tool="newChat" data-tooltip="{{newChat}}"> -->
+                        <div class="btnSup disabled" id="nouXat" idio-tool="newChat" data-tooltip="{{newChat}}">
+                            <button type="button" id="btnNouXat">
+                                <img class="descarregables" src="/static/icons/nouX_MVM.svg" alt="{{newChat}}">
+                            </button>
+                        </div>
                     </div>
                     <div class="desplegable disabled" id="descarregar">
                         <!-- <button class="desplegable-toggle" type="button">
                             📥 Descargar
                         </button> -->
                         <!-- <div class = "desplegable-header disabled"> -->
-                        <div class = "desplegable-header" idio-tool="descConvers" data-tooltip="{{descConvers}}">
+                        <div class="desplegable-header" idio-tool="descConvers" data-tooltip="{{descConvers}}">
                             <img class="descarregables" src="/static/icons/descarrega_MVM.svg" alt="{{descConvers}}">
                             <!-- <img class="descarregables" src="/static/descarrega_MVM.svg" alt="Descargar"> -->
                             <!-- <span>📥 Descargar</span> -->
@@ -80,25 +90,28 @@
                             <option value="ca" {% if current_language=='ca' %}selected{% endif %}>Català</option>
                         </select>
                     </div>
-                </div> 
+                </div>
             </div>
             <hr>
         </header>
         <main id="bloque-central">
-            <div id="mensaje-inicial" style="font-style: italic;">
-                ...waiting a message / esperando un mensaje / esperant un missatge
+            <div id="mensaje-inicial" style="font-style: italic;" idio="waiting">
+                <!-- ...waiting a message / esperando un mensaje / esperant un missatge -->
+                {{waiting}}
             </div>
         </main>
         <footer id="bloque-inferior">
             <!-- Formulario de envío DE MOMENTO POR JAVASCRIPT -->
             <form id="bloque-formulario">
                 <select id="perfil">
-                    <option value="{{perfils[0][0]}}">{{perfils[0][1]}}</option>
+                    <!-- <option value="{{perfils[0][0]}}">{{perfils[0][1]}}</option> -->
+                    <option value="{{perfils[0][0]}}" idio="{{perfils[0][2]}}" selected>{{perfils[0][1]}}</option>
                     {% for perfil in perfils[1:] %}
-                    <option value="{{perfil[0]}}">{{perfil[1]}}</option>
+                    <!-- <option value="{{perfil[0]}}">{{perfil[1]}}</option> -->
+                    <option value="{{perfil[0]}}" idio="{{perfil[2]}}">{{perfil[1]}}</option>
                     {% endfor %}
                 </select>
-                <div style="display: flex;">
+                <div style="display: flex; gap:5px;">
                     <!-- de moment mantenim input tipus text -->
                     <textarea id="el-mensaje" name="mensaje" placeholder="{{msgPlaceholder}}"
                         idio-place="msgPlaceholder" rows="1"></textarea>
@@ -114,7 +127,29 @@
 
         </footer>
 
+
     </div>
+    <!-- ca: Posarem el popup de diàlog de càrrega de conversa separat dels altres elements -->
+     <!-- <dialog id="popupCarregaConversa">
+        <form id="formConversa">
+            <label id="lblRefConversa" for="refConversa" idio="carregaConversa">{{carregaConversa}}</label>
+            <input type="text" id="refConversa" name="refConversa" required>
+            <button type="submit" id="btnCarregaConversa" idio="btnCarregaConversa">{{btnCarregaConversa}}</button>
+            <button type="button" id="cancelarCarrega" idio="cancelar">{{cancelar}}</button>
+        </form>
+
+     </dialog> -->
+     <dialog id="popupCarregaConversa">
+        <form id="formConversa" >
+            <label id="lblRefConversa" for="refConversa" idio="carregaConversa">{{carregaConversa}}</label>
+            <input type="text" id="refConversa" name="refConversa" required>
+            <div id="botonsConversa">
+                <button type="submit" id="btnCarregaConversa" idio="btnCarregaConversa" disabled>{{btnCarregaConversa}}</button>
+                <button type="button" id="cancelarCarrega" idio="cancelar">{{cancelar}}</button>
+            </div>
+        </form>
+
+     </dialog>
     <div id="content">
 
     </div>
@@ -124,14 +159,21 @@
     <script>
         const alertes = {
             mida: "{{mida}}",
-            inclos: "{{inclos}}"
+            inclos: "{{inclos}}",
+            errorConversa: "{{errorConversa}}",
+            noConversa: "{{noConversa}}",
+            errorDesc: "{{errorDesc}}",
         };
-        let traduccions ={
+        <!-- ca: es posen els elements que s'han de generar i no existeixen en l'HTML -->
+        let traduccions = {
             answer: "{{answer}}",
             descConvers: "{{descConvers}}",
             txt: "{{txt}}",
             md: "{{md}}",
-            pdf: "{{pdf}}"
+            pdf: "{{pdf}}",
+            thinking: "{{thinking}}",
+            received: "{{received}}",
+            // waiting: "{{waiting}}"
         };
     </script>
     <!-- llibreries externes -->

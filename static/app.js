@@ -17,11 +17,23 @@ const idiomaSelect = document.getElementById("idioma");
 const perfilSelect = document.getElementById("perfil");
 const botons = document.getElementById("botons");
 const btnNouXat = document.getElementById("btnNouXat");
+const carregaXat = document.getElementById("carregaXat");
+const btnCarregaXat = document.getElementById("btnCarregaXat");
+const popupCarregaConversa = document.getElementById("popupCarregaConversa");
+const formConversa = document.getElementById("formConversa");
+const refConversa = document.getElementById("refConversa");
+const btnCarregaConversa = document.getElementById("btnCarregaConversa");
+const cancelarCarrega = document.getElementById("cancelarCarrega");
+const blocbox = document.getElementById("blocbox");
 let currentConversationId = null;
 let enviant = false;
-let traduccions = {};
+// ca: ATENCIÓ: les traduccions les definim a index.html en un element script
+//let traduccions = {};
+// let traduccions = traduccions;
 
 const desplegable = document.getElementById("descarregar");
+const nouXat = document.getElementById("nouXat");
+const idibox = document.getElementById("idibox");
 // const toggle = desplegable.querySelector(".desplegable-toggle");
 // const toggle = desplegable.querySelector(".desplegable-header");
 
@@ -31,11 +43,16 @@ const desplegable = document.getElementById("descarregar");
 // });
 
 function actualitzaEstatDescarrega() {
-  const dropdown = document.getElementById("descarregar");
+  // const dropdown = document.getElementById("descarregar");
 
-  dropdown.classList.toggle("disabled", !Number.isInteger(currentConversationId));
-  const nouXat = document.getElementById("nouXat")
-  nouXat.classList.toggle("disabled", !Number.isInteger(currentConversationId));
+  // dropdown.classList.toggle("disabled", !Number.isInteger(currentConversationId));
+  // const nouXat = document.getElementById("nouXat")
+  // nouXat.classList.toggle("disabled", !Number.isInteger(currentConversationId));
+
+  // ca: ara ho fem amb un array d'elements a deshabilitar
+  [desplegable, nouXat].forEach(element => {
+    element.classList.toggle("disabled", !Number.isInteger(currentConversationId));
+  });
 }
 
 desplegable.querySelectorAll("[data-format]").forEach(opcion => {
@@ -59,6 +76,17 @@ btnNouXat.addEventListener('click', () => {
   // console.log('Nou xat: botó habilitat, executar acció');
   reiniciaXat();
 });
+
+// btnCarregaXat.addEventListener('click', () => {
+//     if (btnCarregaXat.parentElement.classList.contains('disabled')) {
+//     // console.log('Nou xat: botó deshabilitat');
+//     return;
+//   }
+
+//   console.log('Carrega xat: botó habilitat, executar acció');
+//   // TODO: implementar carrega de xat
+// });
+
 // desplegable.hidden = !currentConversationId;
 
 // ca: a l'haver passat a mòdul app.js, ara, les variables no es veuen fora.
@@ -146,7 +174,8 @@ function crearMsgStatus() {
 
   const actualizar = () => {
     const temps = Math.floor((performance.now() - inici) / 1000);
-    node.textContent = `Thinking... / Pensando... / Pensant... (${temps}s.)`;
+    // node.textContent = `Thinking... / Pensando... / Pensant... (${temps}s.)`;
+    node.textContent = traduccions.thinking + ' (' + temps + 's.)';
   };
 
   actualizar();
@@ -183,8 +212,10 @@ function finalitzarMsgStatus(status, error = null) {
     // status.node.textContent = `Error: ${error.message}`;
     status.node.textContent = `Error: ${error.message} (${temps}s.)`;
   } else {
+    // status.node.textContent =
+    //   `Thought... / Pensado... / Pensat... (${temps}s.)`;
     status.node.textContent =
-      `Thought... / Pensado... / Pensat... (${temps}s.)`;
+      traduccions.received + ' (' + temps + 's.)';
   }
 }
 
@@ -216,6 +247,14 @@ bloqueFormulario.addEventListener('submit', async (e) => {
   bloqueCentral.scrollTop = bloqueCentral.scrollHeight;
 
   botons.disabled = true;
+  // // btnCarregaXat.disabled = true;
+  
+  // carregaXat.classList.add("disabled")
+  // ca:ho canvio per un array d'elements a deshabilitar
+  [carregaXat, desplegable, nouXat, idibox, idiomaSelect].forEach(element => {
+    element.classList.add("disabled");
+  });
+  idiomaSelect.disabled = true;
 
   try {
     const formData = new FormData();
@@ -267,6 +306,12 @@ bloqueFormulario.addEventListener('submit', async (e) => {
     mensaje.style.height = "auto";
     // llista_arxius.length = 0;
     neteja_arxius();
+    // //btnCarregaXat.disabled = false;
+    // carregaXat.classList.remove("disabled")
+    [carregaXat, idibox, idiomaSelect].forEach(element => {
+      element.classList.remove("disabled");
+    });
+    idiomaSelect.disabled = false;
     botonEnviar.disabled = true;
     botons.disabled = false;
     enviant = false;
@@ -309,6 +354,9 @@ async function reclamaIdioma(quinIdioma) {
 
 idiomaSelect.addEventListener('change', async (elEvent) => {
   // console.log("Idioma seleccionat: " + elEvent.target.value);
+  if (elEvent.target.parentElement.classList.contains("disabled")) {
+    return;
+  }
   await reclamaIdioma(elEvent.target.value);
 });
 
@@ -347,6 +395,7 @@ function canvia_idioma(amb_idioma, textos) {
   // ca: canviar els textos de les alertes
   alertes.mida = textos.mida;
   alertes.inclos = textos.inclos;
+  alertes.errorConversa = textos.errorConversa;
 };
 
 mensaje.addEventListener("input", () => {
@@ -374,7 +423,10 @@ function reiniciaXat() {
   const mensajeInicial = document.createElement("div");
   mensajeInicial.id = "mensaje-inicial";
   mensajeInicial.style.fontStyle = "italic";
-  mensajeInicial.textContent = "...waiting a message / esperando un mensaje / esperant un missatge";
+  mensajeInicial.setAttribute("idio", "waiting");
+  // mensajeInicial.textContent = "...waiting a message / esperando un mensaje / esperant un missatge";
+  // console.log(traduccions)
+  mensajeInicial.textContent = traduccions.waiting;
 
   bloqueCentral.appendChild(mensajeInicial);
 
@@ -386,7 +438,11 @@ function reiniciaXat() {
   
   // ca: reiniciar el botó d'enviar
   botonEnviar.disabled = true;
-  
+
+  // ca: activar el carregar xat
+  //btnCarregaXat.disabled = false;
+  carregaXat.classList.remove("disabled")
+    
   // ca: reiniciar el textarea
   mensaje.value = "";
   mensaje.style.height = "auto";
@@ -411,3 +467,104 @@ function reiniciaXat() {
   // ca: enfocar el textarea
   mensaje.focus();
 }
+btnCarregaXat.addEventListener("click", () => {
+  if (btnCarregaXat.parentElement.classList.contains('disabled')) {
+    // console.log('Nou xat: botó deshabilitat');
+    return;
+  }
+  // console.log('Carrega xat: botó habilitat, executar acció');
+
+  formConversa.reset();
+  refConversa.value = "";
+  btnCarregaConversa.disabled = true;
+  popupCarregaConversa.showModal();
+  refConversa.focus();
+});
+refConversa.addEventListener("input", () => {
+  btnCarregaConversa.disabled = refConversa.value.trim() === '';
+});
+formConversa.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const ref = refConversa.value.trim();
+  if (!ref) return;
+  try {
+    const resposta = await fetch("/carregaConv", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ref: ref }),
+    });
+    const contingut = await resposta.json();
+    // if (!resposta.ok) throw new Error("Error carregant conversa");
+    // console.log("Resposta:", contingut);
+    if (!resposta.ok) throw new Error(contingut.detail);
+  // const data = await resposta.json();
+  // if (data.error) throw new Error(data.error);
+  // ca: actualitzar l'ID de la conversa
+  //   currentConversationId = data.conversation_id;
+  //   // ca: mostrar els missatges
+  //   mostrarMissatges(data.messages);
+  //   // ca: tancar el popup
+  //   popupCarregaConversa.close();
+  // console.log("Carregant conversa:", ref);
+    console.log("Contingut:", contingut);
+    // alert("Carregant conversa: " + ref);
+
+    currentConversationId = contingut.conversacio.conversacio_id;
+    perfilSelect.value = contingut.conversacio.perfil_id;
+    // ca: el perfil ha d'estar deshabilitat, hem carregat una conversa existent
+    perfilSelect.disabled = true;
+    
+    // ca: reiniciar el botó d'enviar
+    botonEnviar.disabled = true;
+    
+    // ca: netejem el bloc central
+    const bloqueCentral = document.getElementById("bloque-central");
+    bloqueCentral.innerHTML = "";
+
+      
+    // ca: reiniciar el textarea
+    mensaje.value = "";
+    mensaje.style.height = "auto";
+    
+    // ca: reiniciar la variable de control
+    neteja_arxius();
+    botonEnviar.disabled = true;
+    botons.disabled = false;
+
+    enviant = false;
+    window.enviant = false;    
+
+    contingut.missatges.forEach(missatge => {
+      if (missatge.role === 'user') {
+        afegirMsgPrompt({ text: missatge.contingut.trim(), arxius: missatge.arxius });
+      } else if (missatge.role === 'assistant') {
+        afegirMsgResponse({ text: missatge.contingut.trim(), id_missatge: missatge.id_missatge });
+      }
+    });
+      // ca: actualitzar l'estat del formulari
+    canvia_form_estat();
+    
+    // ca: actualitzar l'estat de la descàrrega
+    actualitzaEstatDescarrega();
+    
+    // ca: fer scroll al final del bloc central
+    bloqueCentral.scrollTop = bloqueCentral.scrollHeight;
+
+
+
+
+  } catch (err) {
+    // console.error("Error carregant conversa: ", err);
+    // console.log(alertes);
+      alert(alertes.errorConversa + ": " + err.message);
+  } finally {
+    popupCarregaConversa.close();
+    // ca: enfocar el textarea
+    mensaje.focus();
+  }
+});
+cancelarCarrega.addEventListener("click", () => {
+  popupCarregaConversa.close();
+});
