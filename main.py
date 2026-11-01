@@ -21,8 +21,9 @@ import requests
 import sqlite3
 import uuid
 import secrets
+import hashlib
 
-import io
+import io, sys
 # ca: a partir d'aquí, importacions de les meves llibreries
 import context as ctx
 import fitx_gen as fg
@@ -62,17 +63,6 @@ try:
             nom TEXT NOT NULL,
             nom_a_mostrar TEXT NOT NULL,
             parametres TEXT)"""
-        # tbl_conversations = """CREATE TABLE IF NOT EXISTS conversations (
-        #     id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
-        #     session_id TEXT NOT NULL,
-        #     model_id INTEGER NOT NULL, nom TEXT DEFAULT 'default chat', 
-        #     stream TEXT DEFAULT 'false', think TEXT DEFAULT 'true',
-        #     options TEXT DEFAULT '{}',
-        #     data_creacio TEXT DEFAULT CURRENT_TIMESTAMP,
-        #     data_modificacio TEXT DEFAULT CURRENT_TIMESTAMP,
-        #     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-        #     FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE CASCADE)
-        #     """
         tbl_conversations = """CREATE TABLE IF NOT EXISTS conversations (
             id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
             session_id TEXT NOT NULL,
@@ -88,12 +78,6 @@ try:
             FOREIGN KEY (perfil_id) REFERENCES perfil (id) ON DELETE CASCADE)
             """
         # ca: Nou perfil apuntem a un model per defecte
-        # tbl_perfil = """CREATE TABLE IF NOT EXISTS perfil (
-        #     id INTEGER PRIMARY KEY AUTOINCREMENT, nom_rol UNIQUE ON CONFLICT IGNORE,
-        #     model_id INTEGER NOT NULL, content NOT NULL, parametres TEXT DEFAULT '{}',
-        #     think TEXT DEFAULT 'true',
-        #     FOREIGN KEY (model_id) REFERENCES models (id) ON DELETE SET DEFAULT)
-        #     """
         tbl_perfil = """CREATE TABLE IF NOT EXISTS perfil (
             id INTEGER PRIMARY KEY AUTOINCREMENT, nom_rol TEXT UNIQUE ON CONFLICT IGNORE,
             nom_key TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
@@ -122,17 +106,6 @@ try:
                           ("qwen3.6:latest", "Qwen 3.6", '{"temperature":0.5,"num_ctx":262144, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}'),
                           ("qwen3.5:4b", "Qwen 3.5 4B", '{"temperature":1.1,"num_ctx":131072, "top_k":30,"top_p":0.75,"repeat_penalty":1.1}'),
                           ("qwen3.8:27b", "Qwen 3.8", '{"temperature":0.5,"num_ctx":262144, "top_k":40,"top_p":0.92,"repeat_penalty":1.1}')]
-        # perfil_data_ini = [["Analyst / Analista", 1,
-        #                 "Mi rol principal eres un analista estadístico.", '{}',"true"],
-        #                 ["Generalist expert / Experto generalista / Expert generalista", 2,
-        #                 "Soy un experto en cualquier área, que además de dar la respuesta más adecuada según el tipo de pregunta, también puede ofrecer consejos y recomendaciones.", '{}',"true"],
-        #                 ["Fast Responder / Respondedor Rápido / Responedor Ràpid", 3,
-        #                 "Person who answers instantly, assuming knowledge without deep thinking; speed over accuracy. No thinking.", '{}',"false"],
-        #                 ["Cultured Thinker / Pensador Culto / Pensador Culte", 1,
-        #                 "Mi rol principal es de una persona con conocimiento amplio, buen razonamiento y cultura sólida; inteligente sin ser erudito, si puedes responde con estos términos.",
-        #                  '{"temperature":0.5, "top_k":40, "repeat_penalty":1.1}', "true"],
-        #                 ["The wise friend / El amigo sabio / L\'amic savi", 4,
-        #                 "Soy una persona con amplio conocimiento, al que acudir para saber algo de lo que sea, Sugiero las siguientes preguntas a formular.", '{}',"true"]]
         perfil_data_ini = [["Analyst / Analista", "analyst", 1,
                         "Mi rol principal eres un analista estadístico.", '{}',"true"],
                         ["Generalist expert / Experto generalista / Expert generalista", "generalist", 2,
@@ -145,7 +118,6 @@ try:
                         ["The wise friend / El amigo sabio / L\'amic savi", "friend", 4,
                         "Soy una persona con amplio conocimiento, al que acudir para saber algo de lo que sea, Sugiero las siguientes preguntas a formular.", '{}',"true"]]
         for x in range(len(perfil_data_ini)):
-            # perfil_data_ini[x][2] += ctx.INFORMACIO_ADDICIONAL
             perfil_data_ini[x][3] += ctx.INFORMACIO_ADDICIONAL
 
         cursor.execute(tbl_users)
@@ -169,6 +141,18 @@ except Exception as e:
     print(f"Error loading database / error leyendo la base de detos / error llegint la base de dades: {e}")
     import traceback
     traceback.print_exc()
+
+# ca: Aquí la millora, comprovarem el hash del schema de la base de dades
+
+HASH_SCHEMA_prAIH = "e99020d37ec8317efdd1d1a3c3aadfae2dffeb9361bc894d032a8065568542c9"
+
+schema_actual =  hashlib.sha256(str(cursor.execute("SELECT * FROM sqlite_schema WHERE type='table' and name NOT LIKE 'sqlite_%'").fetchall()).encode('utf-8')).hexdigest()
+
+print(f"Schema de la base de dades actual:\n{schema_actual}")
+
+if schema_actual != HASH_SCHEMA_prAIH:
+    print("El schema de la base de dades ha canviat, aturem la execució.")
+    sys.exit(1)
 
 # ca: URL del proveïdor per defecte, en principi Ollama
 llmProvider = "http://localhost:11434/api/chat"
@@ -526,6 +510,7 @@ async def recupera_missatges(la_conversacio:int):
     with prAIHdb:
         # ens interessa veure el que hi ha
         # missatges= cursor.execute("SELECT role, content FROM messages WHERE conversacio_id = ? ORDER BY id", (la_conversacio,)).fetchall()
+        cursor = prAIHdb.cursor()
         missatges= cursor.execute("SELECT role, content, id FROM messages WHERE conversacio_id = ? ORDER BY id", (la_conversacio,)).fetchall()
         llista_missatges = []
         claus= ("role","content")
@@ -546,7 +531,8 @@ def afegir_missatge(la_conversacio:int, resposta:dict, data_ara=None, arxius_con
     # i ara no el guardo en una llista
     missatge =resposta["message"]
     with prAIHdb:
-        # primer obtenim l'anterior missatge
+        # ca: primer obtenim l'anterior missatge
+        cursor = prAIHdb.cursor()
         missatge_id=cursor.execute("INSERT INTO messages (conversacio_id,role,content,metadades, data_creacio) VALUES (?,?,?,?,?)",
                         (la_conversacio, missatge["role"],missatge["content"],json.dumps({k:v for k,v in resposta.items() if k not in ("message",)}),data_ara)).lastrowid
         cursor.execute("UPDATE OR IGNORE conversations SET (data_modificacio) = (?) WHERE id = ?",
